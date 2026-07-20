@@ -314,6 +314,7 @@ class WooImportDumpCommand extends Command
                         'total' => $orderTotal,
                         'currency' => 'RON',
                         'woo_customer_id' => $c['id'],
+                        'customer_email' => $c['email'],
                         'billing_email' => $c['email'],
                         'billing_first_name' => $c['first_name'],
                         'billing_last_name' => $c['last_name'],
