@@ -14,7 +14,6 @@
         "bacon/bacon-qr-code": "^2.0",
         "bjoernffm/spintax": "^1.0",
         "braintree/braintree_php": "^3.22",
-        "coinpaymentsnet/coinpayments-php": "^1.0",
         "deeplcom/deepl-php": "^1.1",
         "dompdf/dompdf": "^1.1",
         "facebook/php-ads-sdk": "^11.0",
