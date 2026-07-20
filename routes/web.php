@@ -1022,17 +1022,17 @@ Route::group(['namespace' => '\Acelle\Http\Controllers\Admin', 'middleware' => [
     Route::get('admin/notifications', 'NotificationController@index');
 
     // User
-    Route::get('admin/users/{uid}/one-click-login', 'UserController@oneClickLogin');
-    Route::get('admin/customers/{customer_uid}/users/login-as/{uid}', 'UserController@loginAs');
-    Route::get('admin/customers/{customer_uid}/users/listing/{page?}', 'UserController@listing');
-    Route::get('admin/customers/{customer_uid}/users/delete', 'UserController@delete');
-    Route::get('admin/customers/{customer_uid}/users/disable', 'UserController@disable');
-    Route::get('admin/customers/{customer_uid}/users/enable', 'UserController@enable');
-    Route::get('admin/customers/{customer_uid}/users', 'UserController@index');
-    Route::get('admin/customers/{customer_uid}/users/create', 'UserController@create');
-    Route::post('admin/customers/{customer_uid}/users', 'UserController@store');
-    Route::get('admin/customers/{customer_uid}/users/{user}/edit', 'UserController@edit');
-    Route::patch('admin/customers/{customer_uid}/users/{user}/update', 'UserController@update');
+    Route::get('admin/users/{uid}/one-click-login', '\Acelle\Http\Controllers\UserController@oneClickLogin');
+    Route::get('admin/customers/{customer_uid}/users/login-as/{uid}', '\Acelle\Http\Controllers\UserController@loginAs');
+    Route::get('admin/customers/{customer_uid}/users/listing/{page?}', '\Acelle\Http\Controllers\UserController@listing');
+    Route::get('admin/customers/{customer_uid}/users/delete', '\Acelle\Http\Controllers\UserController@delete');
+    Route::get('admin/customers/{customer_uid}/users/disable', '\Acelle\Http\Controllers\UserController@disable');
+    Route::get('admin/customers/{customer_uid}/users/enable', '\Acelle\Http\Controllers\UserController@enable');
+    Route::get('admin/customers/{customer_uid}/users', '\Acelle\Http\Controllers\UserController@index');
+    Route::get('admin/customers/{customer_uid}/users/create', '\Acelle\Http\Controllers\UserController@create');
+    Route::post('admin/customers/{customer_uid}/users', '\Acelle\Http\Controllers\UserController@store');
+    Route::get('admin/customers/{customer_uid}/users/{user}/edit', '\Acelle\Http\Controllers\UserController@edit');
+    Route::patch('admin/customers/{customer_uid}/users/{user}/update', '\Acelle\Http\Controllers\UserController@update');
 
     // Form Template
     Route::get('admin/templates/forms/{uid}/preview', 'FormTemplateController@preview');

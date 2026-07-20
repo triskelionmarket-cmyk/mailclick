@@ -53,7 +53,7 @@ class CustomerController extends Controller
 
         $customers = \Acelle\Model\Customer::search($request->keyword)
             ->filter($request)
-            ->orderBy($request->sort_order ?? 'created_at', $request->sort_direction ? $request->sort_direction : 'desc')
+            ->orderBy($request->sort_order, $request->sort_direction ? $request->sort_direction : 'asc')
             ->paginate($request->per_page);
 
         return view('admin.customers._list', [
