@@ -47,6 +47,26 @@
             'rules' => ['mail_list_uid' => 'required'],
             ])
 
+            @if (in_array($template_key, ['abandoned-cart', 'post-purchase', 'review-request', 'browse-abandonment', 'replenishment', 'price-drop']))
+                @php
+                    $sourceOptions = Auth::user()->customer->local()->getSelectOptions('woocommerce');
+                    $firstSourceUid = count($sourceOptions) > 0 ? $sourceOptions[0]['value'] : '';
+                @endphp
+                @if (count($sourceOptions) > 0)
+                    <div class="mt-3">
+                        @include('helpers.form_control', [
+                            'type' => 'select',
+                            'class' => 'required',
+                            'label' => trans('messages.automation.trigger.woo_order_completed.select_store'),
+                            'name' => 'options[source_uid]',
+                            'value' => $firstSourceUid,
+                            'options' => $sourceOptions,
+                            'rules' => ['options.source_uid' => 'required'],
+                        ])
+                    </div>
+                @endif
+            @endif
+
             <div class="text-center mt-4">
                 <button class="btn btn-secondary mt-20">{{ trans('messages.automation.get_started') }}</button>
             </div>

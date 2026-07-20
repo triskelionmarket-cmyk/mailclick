@@ -1944,11 +1944,19 @@ class Automation2 extends Model
     /**
      * Build flow data from a template key.
      */
-    public static function buildTemplateFlowData($templateKey)
+    public static function buildTemplateFlowData($templateKey, $options = [])
     {
         $uid = function () {
             return uniqid();
         };
+
+        $triggerSourceOptions = !empty($options['source_uid']) ? ['source_uid' => $options['source_uid']] : [];
+        if (empty($triggerSourceOptions) && \Auth::check()) {
+            $firstSource = \Acelle\Model\Source::where('customer_id', \Auth::user()->customer->id)->where('type', 'woocommerce')->first();
+            if ($firstSource) {
+                $triggerSourceOptions = ['source_uid' => $firstSource->uid];
+            }
+        }
 
         switch ($templateKey) {
             case 'welcome-series':
@@ -2046,11 +2054,11 @@ class Automation2 extends Model
                         'title' => trans('messages.automation.trigger.tree.woo-abandoned-cart'),
                         'type' => 'ElementTrigger',
                         'child' => $waitId1,
-                        'options' => [
+                        'options' => array_merge([
                             'key' => 'woo-abandoned-cart',
                             'type' => 'woo-abandoned-cart',
                             'init' => true,
-                        ],
+                        ], $triggerSourceOptions),
                         'last_executed' => null,
                         'evaluationResult' => null,
                     ],
@@ -2190,11 +2198,11 @@ class Automation2 extends Model
                         'title' => trans('messages.automation.trigger.tree.woo-order-completed'),
                         'type' => 'ElementTrigger',
                         'child' => $emailId1,
-                        'options' => [
+                        'options' => array_merge([
                             'key' => 'woo-order-completed',
                             'type' => 'woo-order-completed',
                             'init' => true,
-                        ],
+                        ], $triggerSourceOptions),
                         'last_executed' => null,
                         'evaluationResult' => null,
                     ],
@@ -2272,11 +2280,11 @@ class Automation2 extends Model
                         'title' => trans('messages.automation.trigger.tree.woo-order-completed'),
                         'type' => 'ElementTrigger',
                         'child' => $waitId1,
-                        'options' => [
+                        'options' => array_merge([
                             'key' => 'woo-order-completed',
                             'type' => 'woo-order-completed',
                             'init' => true,
-                        ],
+                        ], $triggerSourceOptions),
                         'last_executed' => null,
                         'evaluationResult' => null,
                     ],
@@ -2398,11 +2406,11 @@ class Automation2 extends Model
                         'title' => trans('messages.automation.trigger.tree.woo-browse-abandonment'),
                         'type' => 'ElementTrigger',
                         'child' => $waitId1,
-                        'options' => [
+                        'options' => array_merge([
                             'key' => 'woo-browse-abandonment',
                             'type' => 'woo-browse-abandonment',
                             'init' => true,
-                        ],
+                        ], $triggerSourceOptions),
                         'last_executed' => null,
                         'evaluationResult' => null,
                     ],
@@ -2441,11 +2449,11 @@ class Automation2 extends Model
                         'title' => trans('messages.automation.trigger.tree.woo-replenishment'),
                         'type' => 'ElementTrigger',
                         'child' => $emailId1,
-                        'options' => [
+                        'options' => array_merge([
                             'key' => 'woo-replenishment',
                             'type' => 'woo-replenishment',
                             'init' => true,
-                        ],
+                        ], $triggerSourceOptions),
                         'last_executed' => null,
                         'evaluationResult' => null,
                     ],
@@ -2472,11 +2480,11 @@ class Automation2 extends Model
                         'title' => trans('messages.automation.trigger.tree.woo-price-drop'),
                         'type' => 'ElementTrigger',
                         'child' => $emailId1,
-                        'options' => [
+                        'options' => array_merge([
                             'key' => 'woo-price-drop',
                             'type' => 'woo-price-drop',
                             'init' => true,
-                        ],
+                        ], $triggerSourceOptions),
                         'last_executed' => null,
                         'evaluationResult' => null,
                     ],
@@ -2517,7 +2525,18 @@ class Automation2 extends Model
         // pass validation and save
         $this->mail_list_id = \Acelle\Model\MailList::findByUid($params['mail_list_uid'])->id;
 
-        $data = self::buildTemplateFlowData($params['template_key']);
+        $options = $params['options'] ?? [];
+        if (empty($options['source_uid'])) {
+            $customer = $this->customer ?? (\Auth::check() ? \Auth::user()->customer : null);
+            if ($customer) {
+                $firstSource = \Acelle\Model\Source::where('customer_id', $customer->id)->where('type', 'woocommerce')->first();
+                if ($firstSource) {
+                    $options['source_uid'] = $firstSource->uid;
+                }
+            }
+        }
+
+        $data = self::buildTemplateFlowData($params['template_key'], $options);
         $this->data = json_encode($data);
         $this->save();
         $this->updateCache();
