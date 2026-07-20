@@ -36,11 +36,14 @@ class AdminSeeder extends Seeder
             $adminExists = DB::table('admins')->where('user_id', $existingUser->id)->exists();
             if (!$adminExists) {
                 $adminGroup = DB::table('admin_groups')->where('name', 'Administrator')->first();
+                $language = DB::table('languages')->where('is_default', true)->first() ?: DB::table('languages')->first();
                 DB::table('admins')->insert([
                     'uid' => uniqid(),
                     'user_id' => $existingUser->id,
                     'creator_id' => $existingUser->id,
                     'admin_group_id' => $adminGroup ? $adminGroup->id : 1,
+                    'timezone' => 'Europe/Bucharest',
+                    'language_id' => $language ? $language->id : 1,
                     'status' => 'active',
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -54,10 +57,7 @@ class AdminSeeder extends Seeder
         }
 
         // Get the default language
-        $language = DB::table('languages')->where('is_default', true)->first();
-        if (!$language) {
-            $language = DB::table('languages')->first();
-        }
+        $language = DB::table('languages')->where('is_default', true)->first() ?: DB::table('languages')->first();
 
         // Create new user
         $userId = DB::table('users')->insertGetId([
@@ -66,6 +66,8 @@ class AdminSeeder extends Seeder
             'password' => Hash::make($password),
             'first_name' => 'Admin',
             'last_name' => 'MailClick',
+            'timezone' => 'Europe/Bucharest',
+            'language_id' => $language ? $language->id : 1,
             'activated' => true,
             'status' => 'active',
             'api_token' => \Illuminate\Support\Str::random(60),
@@ -82,6 +84,8 @@ class AdminSeeder extends Seeder
             'user_id' => $userId,
             'creator_id' => $userId,
             'admin_group_id' => $adminGroup ? $adminGroup->id : 1,
+            'timezone' => 'Europe/Bucharest',
+            'language_id' => $language ? $language->id : 1,
             'status' => 'active',
             'created_at' => now(),
             'updated_at' => now(),
