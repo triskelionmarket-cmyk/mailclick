@@ -33,11 +33,13 @@ use AppUrl;
 use Acelle\Library\Tool;
 use Acelle\Library\Traits\HasUid;
 use Acelle\Library\Facades\Hook;
+use Laravel\Passport\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Acelle\Library\Traits\HasSettingsField;
 
 class User extends Authenticatable
 {
+    use HasApiTokens;
     use Notifiable;
     use HasSettingsField;
     use HasUid;
