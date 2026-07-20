@@ -42,7 +42,7 @@
             'label' => trans('messages.automation.choose_list'),
             'name' => 'mail_list_uid',
             'value' => '',
-            'options' => Auth::user()->customer->local()->readCache('MailListSelectOptions', []),
+            'options' => Auth::user()->customer->local()->getMailListSelectOptions([], true),
             'include_blank' => trans('messages.automation.choose_list.placeholder'),
             'rules' => ['mail_list_uid' => 'required'],
             ])

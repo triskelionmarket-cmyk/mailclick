@@ -6,6 +6,7 @@
         $customer = $user ? $user->customer->local() : null;
         $sourceOptions = $customer ? $customer->getSelectOptions('woocommerce') : [];
         $defaultSourceUid = count($sourceOptions) > 0 ? $sourceOptions[0]['value'] : '';
+        $listOptions = $customer ? $customer->getMailListSelectOptions([], true) : [];
     @endphp
 
     <div class="edit-connect-url">
@@ -27,7 +28,7 @@
         'type' => 'select',
         'label' => trans('messages.list'),
         'value' => '',
-        'options' => $customer ? $customer->readCache('MailListSelectOptions', []) : [],
+        'options' => $listOptions,
     ])
 
     <div class="automation-segment">

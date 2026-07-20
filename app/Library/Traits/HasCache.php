@@ -43,7 +43,21 @@ trait HasCache
     public function readCache($key, $default = null)
     {
         $fullkey = $this->getCacheFullKey($key);
-        return Cache::get($fullkey, $default);
+        $value = Cache::get($fullkey);
+
+        if (is_null($value)) {
+            if (method_exists($this, 'getCacheIndex')) {
+                $cacheIndex = $this->getCacheIndex();
+                if (isset($cacheIndex[$key])) {
+                    $value = $cacheIndex[$key]();
+                    $this->putCache($key, $value);
+                    return $value;
+                }
+            }
+            return $default;
+        }
+
+        return $value;
     }
 
     public function forgetCache($key)
