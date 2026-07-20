@@ -14,7 +14,7 @@
 		$menuLayout = $themeCustomer ? $themeCustomer->getMenuLayout() : 'left';
 	@endphp
 
-	@if (getThemeMode($themeMode, request()->session()->get('customer-auto-theme-mode')) == 'dark')
+	@if (getThemeMode($themeMode, session('customer-auto-theme-mode')) == 'dark')
 		<meta name="theme-color" content="{{ getThemeColor($colorScheme) }}">
 	@elseif ($menuLayout == 'left')
 		<meta name="theme-color" content="#eff3f5">
@@ -37,9 +37,9 @@
     <link rel="stylesheet" type="text/css" href="{{ AppUrl::asset('core/css/theme/' . $colorScheme . '.css') }}">
 </head>
 <body class="theme-{{ $colorScheme }} {{ $menuLayout }}bar
-	{{ $menuLayout }}bar-{{ request()->session()->get('customer-leftbar-state') }} state-{{ request()->session()->get('customer-leftbar-state') }}
+	{{ $menuLayout }}bar-{{ session('customer-leftbar-state') }} state-{{ session('customer-leftbar-state') }}
 	fullscreen-search-box
-	mode-{{ getThemeMode($themeMode, request()->session()->get('customer-auto-theme-mode'))  }}
+	mode-{{ getThemeMode($themeMode, session('customer-auto-theme-mode'))  }}
 ">
 	@if(config('app.cartpaye'))
 		@include('layouts.core._menu_frontend_cartpaye')
