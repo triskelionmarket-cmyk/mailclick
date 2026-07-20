@@ -1,0 +1,746 @@
+/* ============================================================
+   MAILCLICK BUILDER — MODERN UI REFRESH
+   Premium design system for email template builder
+   ============================================================ */
+
+/* --- CSS Variables / Design Tokens --- */
+:root {
+    --mc-primary: #4f46e5;
+    --mc-primary-hover: #4338ca;
+    --mc-primary-light: #eef2ff;
+    --mc-accent: #06b6d4;
+    --mc-success: #10b981;
+    --mc-warning: #f59e0b;
+    --mc-danger: #ef4444;
+    --mc-surface: #f8fafc;
+    --mc-surface-2: #f1f5f9;
+    --mc-surface-dark: #1e293b;
+    --mc-surface-darker: #0f172a;
+    --mc-border: #e2e8f0;
+    --mc-border-light: #f1f5f9;
+    --mc-text: #1e293b;
+    --mc-text-muted: #64748b;
+    --mc-text-light: #94a3b8;
+    --mc-text-white: #f8fafc;
+    --mc-radius: 8px;
+    --mc-radius-lg: 12px;
+    --mc-radius-xl: 16px;
+    --mc-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --mc-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --mc-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    --mc-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+    --mc-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --mc-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* --- Global Font Override --- */
+body,
+.top-controls-container,
+.left-sidebar,
+.right-sidebar,
+.widget-title,
+.body__title,
+.control-label,
+.label,
+.form-control,
+select,
+input,
+button {
+    font-family: var(--mc-font) !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   TOOLBAR (Top Navigation Bar)
+   ============================================================ */
+.top-controls-container,
+.topControls {
+    background: linear-gradient(135deg, var(--mc-surface-darker) 0%, var(--mc-surface-dark) 100%) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15) !important;
+}
+
+/* Logo styling */
+.logo-img {
+    max-width: 120px;
+    margin-right: 12px;
+    filter: brightness(1.1);
+    transition: var(--mc-transition);
+}
+.logo-img:hover {
+    filter: brightness(1.25);
+}
+
+/* Toolbar buttons */
+.top-controls-container .btn,
+.topControls .btn {
+    border-radius: var(--mc-radius) !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    padding: 7px 16px !important;
+    letter-spacing: 0.01em;
+    transition: var(--mc-transition) !important;
+    border: none !important;
+}
+
+/* Save button — gradient primary */
+.top-controls-container .btn-primary,
+.topControls .btn-primary,
+.top-controls-container .btn[class*="save"],
+.topControls .btn[class*="save"] {
+    background: linear-gradient(135deg, var(--mc-primary) 0%, #6366f1 100%) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(79,70,229,0.3) !important;
+}
+.top-controls-container .btn-primary:hover,
+.topControls .btn-primary:hover {
+    background: linear-gradient(135deg, var(--mc-primary-hover) 0%, #4f46e5 100%) !important;
+    box-shadow: 0 4px 12px rgba(79,70,229,0.4) !important;
+    transform: translateY(-1px);
+}
+
+/* Toolbar dropdown menus */
+.top-controls-container .dropdown-toggle,
+.topControls .dropdown-toggle {
+    color: var(--mc-text-white) !important;
+    opacity: 0.85;
+    font-weight: 400 !important;
+    font-size: 13px !important;
+}
+.top-controls-container .dropdown-toggle:hover,
+.topControls .dropdown-toggle:hover {
+    opacity: 1;
+    color: white !important;
+}
+
+/* Viewport toggles (phone/tablet/desktop) */
+.top-controls-container .device-selector a,
+.topControls .device-selector a,
+.top-controls-container [class*="viewport"] a,
+.topControls [class*="viewport"] a {
+    color: rgba(255,255,255,0.5) !important;
+    transition: var(--mc-transition) !important;
+    padding: 6px 10px !important;
+    border-radius: var(--mc-radius) !important;
+    margin: 0 2px;
+}
+.top-controls-container .device-selector a:hover,
+.topControls .device-selector a:hover,
+.top-controls-container .device-selector a.active,
+.topControls .device-selector a.active,
+.top-controls-container [class*="viewport"] a:hover,
+.topControls [class*="viewport"] a:hover,
+.top-controls-container [class*="viewport"] a.active,
+.topControls [class*="viewport"] a.active {
+    color: white !important;
+    background: rgba(255,255,255,0.1) !important;
+}
+
+/* Close button */
+.top-controls-container .close-button,
+.topControls .close-button,
+.top-controls-container [class*="close"],
+.topControls [class*="close"] {
+    color: rgba(255,255,255,0.5) !important;
+    transition: var(--mc-transition) !important;
+}
+.top-controls-container .close-button:hover,
+.topControls .close-button:hover {
+    color: var(--mc-danger) !important;
+}
+
+/* ============================================================
+   RIGHT SIDEBAR
+   ============================================================ */
+.right-sidebar,
+.widgets-container,
+.settings-panel {
+    background: var(--mc-surface) !important;
+    border-left: 1px solid var(--mc-border) !important;
+}
+
+/* Sidebar tabs (WIDGETS / TAGS / SETTING) */
+.right-sidebar .nav-tabs,
+.right-sidebar .sidebar-tabs {
+    background: white !important;
+    border-bottom: 1px solid var(--mc-border) !important;
+    padding: 6px 8px !important;
+    gap: 4px;
+}
+
+.right-sidebar .nav-tabs .nav-link,
+.right-sidebar .sidebar-tabs a,
+.right-sidebar .nav-tabs a {
+    border-radius: var(--mc-radius) !important;
+    border: none !important;
+    font-weight: 500 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.04em;
+    text-transform: uppercase !important;
+    color: var(--mc-text-muted) !important;
+    padding: 8px 14px !important;
+    transition: var(--mc-transition) !important;
+    background: transparent !important;
+}
+.right-sidebar .nav-tabs .nav-link:hover,
+.right-sidebar .sidebar-tabs a:hover,
+.right-sidebar .nav-tabs a:hover {
+    color: var(--mc-primary) !important;
+    background: var(--mc-primary-light) !important;
+}
+.right-sidebar .nav-tabs .nav-link.active,
+.right-sidebar .sidebar-tabs a.active,
+.right-sidebar .nav-tabs a.active,
+.right-sidebar .nav-tabs .active .nav-link {
+    background: linear-gradient(135deg, var(--mc-primary) 0%, #6366f1 100%) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(79,70,229,0.25) !important;
+}
+
+/* --- Category headers (E-COMMERCE, GENERAL) --- */
+.right-sidebar .widget-group-title,
+.right-sidebar .group-title,
+.right-sidebar h5,
+.right-sidebar .widgets-container > div > .title,
+.widget-group .group-name {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em;
+    text-transform: uppercase !important;
+    color: var(--mc-text-muted) !important;
+    padding: 16px 16px 8px 16px !important;
+    margin: 0 !important;
+    position: relative;
+}
+
+/* --- Widget cards --- */
+.right-sidebar .panel__body,
+.widget-card,
+.right-sidebar ._1content .panel__body {
+    background: white !important;
+    border: 1px solid var(--mc-border) !important;
+    border-radius: var(--mc-radius-lg) !important;
+    padding: 12px 8px !important;
+    margin: 4px !important;
+    cursor: grab !important;
+    transition: var(--mc-transition) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 85px !important;
+    position: relative;
+    overflow: hidden;
+}
+.right-sidebar .panel__body::before,
+.right-sidebar ._1content .panel__body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--mc-primary), var(--mc-accent));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.right-sidebar .panel__body:hover,
+.right-sidebar ._1content .panel__body:hover {
+    border-color: var(--mc-primary) !important;
+    box-shadow: var(--mc-shadow-md) !important;
+    transform: translateY(-2px) !important;
+}
+.right-sidebar .panel__body:hover::before,
+.right-sidebar ._1content .panel__body:hover::before {
+    opacity: 1;
+}
+.right-sidebar .panel__body:active,
+.right-sidebar ._1content .panel__body:active {
+    cursor: grabbing !important;
+    transform: scale(0.97) !important;
+}
+
+/* Widget card icon area */
+.right-sidebar .image-drag,
+.widget-card .widget-icon {
+    margin-bottom: 6px;
+}
+.right-sidebar .image-drag img,
+.widget-card .widget-icon img {
+    opacity: 0.65;
+    transition: var(--mc-transition);
+    filter: grayscale(20%);
+}
+.right-sidebar .panel__body:hover .image-drag img,
+.right-sidebar ._1content .panel__body:hover .image-drag img {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: scale(1.05);
+}
+
+/* Widget card titles */
+.right-sidebar .body__title,
+.widget-card .widget-label {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: var(--mc-text) !important;
+    text-align: center !important;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+    margin-top: 4px;
+}
+
+/* Product widget specific */
+.product-list-widget {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+}
+.product-list-widget.single img {
+    padding: 3px;
+    width: 58px;
+    height: 81px;
+}
+.product-list-widget img {
+    padding: 3px;
+    width: 65px;
+    height: 81px;
+}
+
+/* Woo panel body override */
+.woo-panel__body {
+    background-color: transparent !important;
+}
+
+/* ============================================================
+   SETTINGS PANEL (Right sidebar when element is selected)
+   ============================================================ */
+.right-sidebar .setting-panel,
+.right-sidebar .control-group,
+.widget-section {
+    border-bottom: 1px solid var(--mc-border-light) !important;
+    padding: 12px 16px !important;
+}
+.right-sidebar .setting-panel:last-child,
+.right-sidebar .control-group:last-child {
+    border-bottom: none !important;
+}
+
+/* Element type header (HEADING, TEXT, IMAGE, etc.) */
+.right-sidebar .element-type-header,
+.right-sidebar .control-title {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: var(--mc-text) !important;
+    padding: 14px 16px !important;
+    background: white !important;
+    border-bottom: 1px solid var(--mc-border) !important;
+}
+
+/* Settings labels */
+.right-sidebar .label,
+.right-sidebar .control-label,
+.right-sidebar .setting-label {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: var(--mc-text-muted) !important;
+}
+
+/* Form controls in settings */
+.right-sidebar .form-control,
+.right-sidebar select,
+.right-sidebar input[type="text"],
+.right-sidebar input[type="number"] {
+    border: 1px solid var(--mc-border) !important;
+    border-radius: var(--mc-radius) !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    color: var(--mc-text) !important;
+    background: white !important;
+    transition: var(--mc-transition) !important;
+    height: auto !important;
+    min-height: 32px !important;
+}
+.right-sidebar .form-control:focus,
+.right-sidebar select:focus,
+.right-sidebar input[type="text"]:focus,
+.right-sidebar input[type="number"]:focus {
+    border-color: var(--mc-primary) !important;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.1) !important;
+    outline: none !important;
+}
+
+/* Color picker inputs */
+.right-sidebar input[type="color"] {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: var(--mc-radius) !important;
+    border: 2px solid var(--mc-border) !important;
+    cursor: pointer !important;
+    padding: 2px !important;
+}
+
+/* Alignment & Text style buttons */
+.right-sidebar .btn-group .btn,
+.right-sidebar [class*="align"] .btn,
+.right-sidebar [class*="style"] .btn {
+    border-radius: var(--mc-radius) !important;
+    border: 1px solid var(--mc-border) !important;
+    background: white !important;
+    color: var(--mc-text-muted) !important;
+    padding: 4px 8px !important;
+    margin: 0 2px !important;
+    transition: var(--mc-transition) !important;
+}
+.right-sidebar .btn-group .btn:hover,
+.right-sidebar .btn-group .btn.active {
+    background: var(--mc-primary) !important;
+    color: white !important;
+    border-color: var(--mc-primary) !important;
+}
+
+/* Accordion / collapsible sections */
+.right-sidebar .section-header,
+.right-sidebar .accordion-header {
+    cursor: pointer;
+    padding: 12px 16px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    color: var(--mc-text) !important;
+    background: var(--mc-surface) !important;
+    border-bottom: 1px solid var(--mc-border) !important;
+    transition: var(--mc-transition) !important;
+}
+.right-sidebar .section-header:hover,
+.right-sidebar .accordion-header:hover {
+    background: var(--mc-surface-2) !important;
+}
+
+/* ============================================================
+   CANVAS / EDITING AREA
+   ============================================================ */
+.editing-area,
+.content-area,
+#builder_iframe {
+    background-color: var(--mc-surface) !important;
+}
+
+/* Drop zone placeholder */
+.drop-placeholder,
+[class*="placeholder-drop"],
+.builder-placeholder {
+    border: 2px dashed var(--mc-primary) !important;
+    border-radius: var(--mc-radius) !important;
+    background: var(--mc-primary-light) !important;
+    color: var(--mc-primary) !important;
+    font-weight: 500 !important;
+    text-align: center;
+    padding: 40px 20px !important;
+    transition: var(--mc-transition) !important;
+    opacity: 0.8;
+}
+.drop-placeholder:hover,
+[class*="placeholder-drop"]:hover {
+    opacity: 1;
+    background: rgba(79,70,229,0.08) !important;
+}
+
+/* ============================================================
+   BOTTOM STATUS BAR
+   ============================================================ */
+.bottom-bar,
+.bottom-controls,
+.status-bar {
+    background: var(--mc-surface-darker) !important;
+    border-top: 1px solid rgba(255,255,255,0.06) !important;
+    color: var(--mc-text-light) !important;
+    font-size: 12px !important;
+}
+.bottom-bar a,
+.bottom-controls a,
+.status-bar a {
+    color: rgba(255,255,255,0.6) !important;
+    transition: var(--mc-transition) !important;
+}
+.bottom-bar a:hover,
+.bottom-controls a:hover,
+.status-bar a:hover {
+    color: white !important;
+}
+
+/* Undo/Redo buttons in bottom bar */
+.bottom-bar .btn,
+.bottom-controls .btn {
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: rgba(255,255,255,0.6) !important;
+    border-radius: var(--mc-radius) !important;
+    padding: 4px 8px !important;
+    margin: 2px !important;
+    transition: var(--mc-transition) !important;
+}
+.bottom-bar .btn:hover,
+.bottom-controls .btn:hover {
+    background: rgba(255,255,255,0.15) !important;
+    color: white !important;
+}
+
+/* ============================================================
+   TOAST / NOTIFICATION
+   ============================================================ */
+.toast-notification,
+.alert-success,
+.notify,
+.success-message {
+    background: linear-gradient(135deg, var(--mc-success), #059669) !important;
+    color: white !important;
+    border-radius: var(--mc-radius-lg) !important;
+    box-shadow: var(--mc-shadow-lg) !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    padding: 12px 20px !important;
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ============================================================
+   CUSTOM SELECT2 OVERRIDES (for product selector)
+   ============================================================ */
+.select2-container--default .select2-selection--single {
+    border: 1px solid var(--mc-border) !important;
+    border-radius: var(--mc-radius) !important;
+    height: 34px !important;
+    padding: 3px 8px;
+}
+.select2-container--default .select2-selection--single:focus,
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: var(--mc-primary) !important;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.12) !important;
+}
+.select2-dropdown {
+    border: 1px solid var(--mc-border) !important;
+    border-radius: var(--mc-radius) !important;
+    box-shadow: var(--mc-shadow-lg) !important;
+}
+.select2-results__option--highlighted {
+    background: var(--mc-primary) !important;
+}
+
+/* ============================================================
+   PREVIEW / UNPREVIEW BUTTONS
+   ============================================================ */
+.btn-widget-preview, .btn-widget-unpreview {
+    padding: 4px 10px;
+    height: 30px;
+    border-radius: var(--mc-radius) !important;
+    border: 1px solid var(--mc-border) !important;
+    background: white !important;
+    transition: var(--mc-transition) !important;
+}
+.btn-widget-preview:hover, .btn-widget-unpreview:hover {
+    background: var(--mc-primary-light) !important;
+    border-color: var(--mc-primary) !important;
+}
+.btn-widget-preview span, .btn-widget-unpreview span {
+    font-size: 18px;
+    color: var(--mc-text-muted);
+}
+
+/* ============================================================
+   RSS CONFIG
+   ============================================================ */
+.rss-config-line a {
+    color: var(--mc-text-muted);
+    transition: var(--mc-transition);
+}
+.rss-config-line a:hover {
+    color: var(--mc-primary);
+}
+.fw-600 {
+    font-weight: 600;
+}
+.rss-config-line.item-selected {
+    background: white;
+    box-shadow: var(--mc-shadow);
+    border-radius: var(--mc-radius);
+}
+
+/* ============================================================
+   CHECKBOX / SWITCHERY STYLES
+   ============================================================ */
+.switchery[type="checkbox"], .styled[type="checkbox"], .styled[type="radio"] {
+    width: 19px;
+    height: 19px;
+    display: inline-block;
+    align-items: center;
+    cursor: pointer;
+    display: none;
+}
+.switchery[type="checkbox"]:disabled, .styled[type="checkbox"]:disabled, .styled[type="radio"]:disabled {
+    opacity: 0.6;
+    filter: grayscale(100%);
+    pointer-events: none;
+}
+.switchery[type="checkbox"] ~ .check-symbol:before, .styled[type="checkbox"] ~ .check-symbol:before, .styled[type="radio"] ~ .check-symbol:before {
+    position: relative;
+    display: inline-block;
+    width: 19px;
+    height: 19px;
+    background-color: #eee;
+    border: 1px solid var(--mc-border);
+    content: "done";
+    border-radius: var(--mc-radius);
+    background: white;
+    font-family: 'Material Icons Outlined';
+    font-size: 15px;
+    line-height: 17px;
+    text-align: center;
+    cursor: pointer;
+    text-indent: -90000px;
+    top: 0;
+    transition: var(--mc-transition);
+}
+.switchery[type="checkbox"] ~ .check-symbol:hover:before, .styled[type="checkbox"] ~ .check-symbol:hover:before, .styled[type="radio"] ~ .check-symbol:hover:before {
+    background-color: var(--mc-surface);
+    border-color: var(--mc-primary);
+}
+.switchery[type="checkbox"]:checked ~ .check-symbol:before, .styled[type="checkbox"]:checked ~ .check-symbol:before, .styled[type="radio"]:checked ~ .check-symbol:before {
+    content: "done";
+    background: var(--mc-primary);
+    border-color: var(--mc-primary);
+    color: white;
+    text-indent: 0;
+}
+.switchery[type="checkbox"].half_checked ~ .check-symbol:before, .styled[type="checkbox"].half_checked ~ .check-symbol:before {
+    content: "remove";
+    background: var(--mc-primary);
+    border-color: var(--mc-primary);
+    color: white;
+    text-indent: 0;
+}
+
+/* ============================================================
+   LOADING SPINNER (Builder initial load)
+   ============================================================ */
+.lds-dual-ring:after {
+    border-color: var(--mc-primary) transparent var(--mc-primary) transparent !important;
+}
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+.right-sidebar ::-webkit-scrollbar {
+    width: 5px;
+}
+.right-sidebar ::-webkit-scrollbar-track {
+    background: transparent;
+}
+.right-sidebar ::-webkit-scrollbar-thumb {
+    background: var(--mc-border);
+    border-radius: 10px;
+}
+.right-sidebar ::-webkit-scrollbar-thumb:hover {
+    background: var(--mc-text-light);
+}
+
+/* ============================================================
+   DELETE / DUPLICATE / MOVE BUTTONS (element actions)
+   ============================================================ */
+.right-sidebar .element-actions .btn,
+.right-sidebar .control-actions .btn {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: var(--mc-radius) !important;
+    border: 1px solid var(--mc-border) !important;
+    background: white !important;
+    color: var(--mc-text-muted) !important;
+    transition: var(--mc-transition) !important;
+    margin: 0 2px !important;
+}
+.right-sidebar .element-actions .btn:hover {
+    border-color: var(--mc-danger) !important;
+    color: var(--mc-danger) !important;
+    background: #fef2f2 !important;
+}
+
+/* ============================================================
+   MISC / UTILITY
+   ============================================================ */
+
+/* Smooth transitions on all interactive elements */
+a, button, .btn, input, select, textarea {
+    transition: var(--mc-transition);
+}
+
+/* Remove default outlines and replace with custom focus */
+*:focus {
+    outline: none;
+}
+*:focus-visible {
+    outline: 2px solid var(--mc-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Dropdown menus */
+.dropdown-menu {
+    border: 1px solid var(--mc-border) !important;
+    border-radius: var(--mc-radius) !important;
+    box-shadow: var(--mc-shadow-lg) !important;
+    padding: 4px !important;
+    animation: fadeIn 0.15s ease !important;
+}
+.dropdown-menu .dropdown-item,
+.dropdown-menu a {
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    color: var(--mc-text) !important;
+    transition: var(--mc-transition) !important;
+}
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu a:hover {
+    background: var(--mc-primary-light) !important;
+    color: var(--mc-primary) !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal / Popup styling */
+.modal-content,
+.popup-content {
+    border-radius: var(--mc-radius-xl) !important;
+    border: none !important;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25) !important;
+}
+.modal-backdrop,
+.popup-overlay {
+    backdrop-filter: blur(4px) !important;
+    background: rgba(15,23,42,0.5) !important;
+}
+
+/* TinyMCE inline toolbar match */
+.tox.tox-tinymce-inline .tox-editor-header {
+    border-radius: var(--mc-radius) !important;
+    box-shadow: var(--mc-shadow-lg) !important;
+    border: 1px solid var(--mc-border) !important;
+}

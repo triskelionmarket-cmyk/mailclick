@@ -1,0 +1,8 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+#    # In certain cases, the following two lines are needed (resolve "double public/public" issue for example)
+#    RewriteBase /
+#    RewriteCond %{REQUEST_URI} !^/public/
+
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

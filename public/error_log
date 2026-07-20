@@ -1,0 +1,3 @@
+[02-Jul-2025 01:46:52 UTC] PHP Fatal error:  Maximum execution time of 30 seconds exceeded in /home5/mailclic/app.mailclick.ro/app/Model/Product.php on line 268
+[02-Jul-2025 01:49:53 UTC] PHP Fatal error:  Maximum execution time of 30 seconds exceeded in /home5/mailclic/app.mailclick.ro/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php on line 74
+[02-Jul-2025 01:51:45 UTC] PHP Fatal error:  Maximum execution time of 30 seconds exceeded in /home5/mailclic/app.mailclick.ro/vendor/symfony/http-foundation/File/File.php on line 99
