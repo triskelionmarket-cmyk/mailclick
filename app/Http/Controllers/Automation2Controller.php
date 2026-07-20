@@ -407,6 +407,12 @@ class Automation2Controller extends Controller
             'woo-order-completed' => [
                 'options.source_uid' => 'required',
             ],
+            'woo-browse-abandonment' => [
+                'options.source_uid' => 'required',
+            ],
+            'woo-replenishment' => [
+                'options.source_uid' => 'required',
+            ],
             Automation2::TRIGGER_TAG_BASED => [
                 'options.tags' => 'required',
             ],

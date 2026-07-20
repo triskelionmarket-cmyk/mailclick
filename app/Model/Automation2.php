@@ -67,6 +67,8 @@ class Automation2 extends Model
     public const TRIGGER_TAG_BASED = 'tag-based';
     public const TRIGGER_WOO_ABANDONED_CART = 'woo-abandoned-cart';
     public const TRIGGER_WOO_ORDER_COMPLETED = 'woo-order-completed';
+    public const TRIGGER_WOO_BROWSE_ABANDONMENT = 'woo-browse-abandonment';
+    public const TRIGGER_WOO_REPLENISHMENT = 'woo-replenishment';
     public const TRIGGER_REMOVE_TAG = 'remove-tag';
     public const TRIGGER_ATTRIBUTE_UPDATE = 'attribute-update';
 
@@ -597,6 +599,12 @@ class Automation2 extends Model
                 break;
             case self::TRIGGER_WOO_ORDER_COMPLETED:
                 $this->checkForOrderCompleted();
+                break;
+            case self::TRIGGER_WOO_BROWSE_ABANDONMENT:
+                $this->checkForBrowseAbandonment();
+                break;
+            case self::TRIGGER_WOO_REPLENISHMENT:
+                $this->checkForReplenishment();
                 break;
             case self::TRIGGER_TAG_BASED:
                 break;
@@ -1598,6 +1606,128 @@ class Automation2 extends Model
     }
 
     /**
+     * Check for browse abandonment events and trigger automations.
+     */
+    public function checkForBrowseAbandonment()
+    {
+        $this->logger()->info('Checking for browse abandonment...');
+
+        $sourceUid = $this->getTriggerAction()->getOption('source_uid');
+        if (empty($sourceUid)) {
+            $this->logger()->warning('Browse abandonment trigger has no source_uid configured');
+            return;
+        }
+
+        $source = \Acelle\Model\Source::findByUid($sourceUid);
+        if (!$source) {
+            $this->logger()->warning("Source not found for UID: {$sourceUid}");
+            return;
+        }
+
+        // Look for product view events in the last 24 hours
+        $since = Carbon::now()->subDay();
+
+        $events = \Acelle\Model\EcommerceEvent::where('source_id', $source->id)
+            ->whereIn('event_type', ['product_viewed', 'product_view'])
+            ->where('created_at', '>=', $since)
+            ->whereNotNull('email')
+            ->get();
+
+        $this->logger()->info(sprintf('Found %s product view events since %s', $events->count(), $since->toDateTimeString()));
+
+        foreach ($events as $event) {
+            $subscriber = Subscriber::where('mail_list_id', $this->mail_list_id)
+                ->where('email', strtolower(trim($event->email)))
+                ->first();
+
+            if (!$subscriber) {
+                continue;
+            }
+
+            // Check if subscriber subsequently added to cart or bought anything after this view
+            $hasPurchased = \Acelle\Model\EcommerceEvent::where('source_id', $source->id)
+                ->where('email', $event->email)
+                ->whereIn('event_type', ['cart_abandoned', 'purchase'])
+                ->where('created_at', '>', $event->created_at)
+                ->exists();
+
+            if ($hasPurchased) {
+                $this->logger()->info(sprintf('Subscriber %s purchased or added to cart after viewing product, skipping browse abandonment', $event->email));
+                continue;
+            }
+
+            // Check if already triggered
+            $existingTrigger = $this->getAutoTriggerFor($subscriber);
+            if (!is_null($existingTrigger)) {
+                continue;
+            }
+
+            $this->initTrigger($subscriber);
+            $this->logger()->info(sprintf('Triggered browse abandonment automation for %s (product: %s)', $subscriber->email, $event->product_title ?? $event->source_product_id));
+        }
+    }
+
+    /**
+     * Check for replenishment cycle reminders and trigger automations.
+     */
+    public function checkForReplenishment()
+    {
+        $this->logger()->info('Checking for replenishment cycle reminders...');
+
+        $sourceUid = $this->getTriggerAction()->getOption('source_uid');
+        if (empty($sourceUid)) {
+            $this->logger()->warning('Replenishment trigger has no source_uid configured');
+            return;
+        }
+
+        $source = \Acelle\Model\Source::findByUid($sourceUid);
+        if (!$source) {
+            $this->logger()->warning("Source not found for UID: {$sourceUid}");
+            return;
+        }
+
+        // Fetch completed orders
+        $orders = \Acelle\Model\EcommerceOrder::where('source_id', $source->id)
+            ->where('status', 'completed')
+            ->whereNotNull('subscriber_id')
+            ->get();
+
+        foreach ($orders as $order) {
+            $subscriber = Subscriber::find($order->subscriber_id);
+            if (!$subscriber || $subscriber->mail_list_id != $this->mail_list_id) {
+                continue;
+            }
+
+            // Check items for replenishment cycles
+            foreach ($order->items as $item) {
+                $product = \Acelle\Model\Product::where('source_id', $source->id)
+                    ->where('source_product_id', $item->source_product_id)
+                    ->first();
+
+                if (!$product || empty($product->replenishment_days) || $product->replenishment_days <= 0) {
+                    continue; // Product has no replenishment cycle configured
+                }
+
+                $orderDate = Carbon::parse($order->ordered_at ?? $order->created_at);
+                $dueDate = $orderDate->copy()->addDays($product->replenishment_days);
+                $reminderDate = $dueDate->copy()->subDays(3); // Remind 3 days before expected depletion
+
+                if (Carbon::now()->gte($reminderDate) && Carbon::now()->lte($dueDate->copy()->addDays(7))) {
+                    // Check if already triggered
+                    $existingTrigger = $this->getAutoTriggerFor($subscriber);
+                    if (!is_null($existingTrigger)) {
+                        continue;
+                    }
+
+                    $this->initTrigger($subscriber);
+                    $this->logger()->info(sprintf('Triggered replenishment automation for %s (product: %s, cycle: %d days)', $subscriber->email, $product->title, $product->replenishment_days));
+                    break; // Trigger once per order
+                }
+            }
+        }
+    }
+
+    /**
      * Get first email.
      *
      * @return email
@@ -1674,6 +1804,8 @@ class Automation2 extends Model
         if (config('custom.woo')) {
             $types[] = 'woo-abandoned-cart';
             $types[] = 'woo-order-completed';
+            $types[] = 'woo-browse-abandonment';
+            $types[] = 'woo-replenishment';
         }
 
         return $types;
@@ -1730,6 +1862,16 @@ class Automation2 extends Model
                 'key' => 'vip-welcome',
                 'icon' => 'diamond',
                 'trigger_type' => 'tag-based',
+            ],
+            [
+                'key' => 'browse-abandonment',
+                'icon' => 'visibility',
+                'trigger_type' => 'woo-browse-abandonment',
+            ],
+            [
+                'key' => 'replenishment',
+                'icon' => 'autorenew',
+                'trigger_type' => 'woo-replenishment',
             ],
         ];
     }
@@ -2170,6 +2312,81 @@ class Automation2 extends Model
                     [
                         'id' => $emailId2,
                         'title' => trans('messages.automation.template.vip-welcome.email2'),
+                        'type' => 'ElementAction',
+                        'child' => null,
+                        'options' => [
+                            'key' => 'send-an-email',
+                            'init' => 'true',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                ];
+
+            case 'browse-abandonment':
+                $waitId1 = $uid();
+                $emailId1 = $uid();
+
+                return [
+                    [
+                        'id' => 'trigger',
+                        'title' => trans('messages.automation.trigger.tree.woo-browse-abandonment'),
+                        'type' => 'ElementTrigger',
+                        'child' => $waitId1,
+                        'options' => [
+                            'key' => 'woo-browse-abandonment',
+                            'type' => 'woo-browse-abandonment',
+                            'init' => true,
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $waitId1,
+                        'title' => trans('messages.automation.wait.delay.2 hours'),
+                        'type' => 'ElementWait',
+                        'child' => $emailId1,
+                        'options' => [
+                            'key' => 'wait',
+                            'time' => '2 hours',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $emailId1,
+                        'title' => trans('messages.automation.template.browse-abandonment.email1'),
+                        'type' => 'ElementAction',
+                        'child' => null,
+                        'options' => [
+                            'key' => 'send-an-email',
+                            'init' => 'true',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                ];
+
+            case 'replenishment':
+                $emailId1 = $uid();
+
+                return [
+                    [
+                        'id' => 'trigger',
+                        'title' => trans('messages.automation.trigger.tree.woo-replenishment'),
+                        'type' => 'ElementTrigger',
+                        'child' => $emailId1,
+                        'options' => [
+                            'key' => 'woo-replenishment',
+                            'type' => 'woo-replenishment',
+                            'init' => true,
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $emailId1,
+                        'title' => trans('messages.automation.template.replenishment.email1'),
                         'type' => 'ElementAction',
                         'child' => null,
                         'options' => [

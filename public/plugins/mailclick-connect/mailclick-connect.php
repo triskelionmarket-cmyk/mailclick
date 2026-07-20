@@ -24,6 +24,7 @@ require_once MAILCLICK_CONNECT_PLUGIN_DIR . 'includes/class-mailclick-oauth.php'
 require_once MAILCLICK_CONNECT_PLUGIN_DIR . 'includes/class-mailclick-dashboard.php';
 require_once MAILCLICK_CONNECT_PLUGIN_DIR . 'includes/class-mailclick-cart-tracker.php';
 require_once MAILCLICK_CONNECT_PLUGIN_DIR . 'includes/class-mailclick-order-tracker.php';
+require_once MAILCLICK_CONNECT_PLUGIN_DIR . 'includes/class-mailclick-product-tracker.php';
 
 class MailClick_Connect_Plugin {
 
@@ -42,6 +43,7 @@ class MailClick_Connect_Plugin {
         MailClick_Dashboard::get_instance();
         MailClick_Cart_Tracker::get_instance();
         MailClick_Order_Tracker::get_instance();
+        MailClick_Product_Tracker::get_instance();
 
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));

@@ -104,6 +104,19 @@ class Evaluate extends Action
                 }
                 $result = $this->evaluateEmailClickCondition();
                 break;
+            case 'order_value_above':
+                $threshold = (float) $this->getOption('value');
+                $result = \Acelle\Model\EcommerceOrder::where('subscriber_id', $this->autoTrigger->subscriber->id)
+                    ->where('total', '>=', $threshold)
+                    ->exists();
+                break;
+            case 'purchased_category':
+                $category = $this->getOption('category');
+                $result = \Acelle\Model\EcommerceOrder::where('subscriber_id', $this->autoTrigger->subscriber->id)
+                    ->whereHas('items', function ($q) use ($category) {
+                        $q->where('category', 'like', "%{$category}%");
+                    })->exists();
+                break;
             default:
                 # code...
                 break;

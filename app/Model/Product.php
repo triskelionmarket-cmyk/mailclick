@@ -30,7 +30,7 @@ class Product extends Model
     protected $fillable = [
         'category_id', 'title', 'content', 'customer_id', 'source_id', 
         'source_item_id', 'name', 'price', 'description', 'status', 
-        'stock', 'curency', 'sku', 'unit', 'file', 'pack'
+        'stock', 'curency', 'sku', 'unit', 'file', 'pack', 'replenishment_days'
     ];
 
     // belongs to customer

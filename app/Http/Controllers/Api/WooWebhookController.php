@@ -49,6 +49,9 @@ class WooWebhookController extends Controller
                 return $this->handleOrderCompleted($store, $payload);
             case 'customer_vip':
                 return $this->handleCustomerVip($store, $payload);
+            case 'product_viewed':
+            case 'product_view':
+                return $this->handleProductViewed($store, $payload);
             default:
                 return response()->json(['status' => 'ignored', 'event' => $event]);
         }
@@ -272,6 +275,41 @@ class WooWebhookController extends Controller
             'message' => 'VIP tag applied.',
             'email'   => $email,
             'tag'     => $tag,
+        ]);
+    }
+
+    /**
+     * Handle product view event from WordPress plugin / JS tracking.
+     */
+    protected function handleProductViewed(WooStore $store, array $payload)
+    {
+        $email = strtolower(trim($payload['email'] ?? ''));
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json(['error' => 'Invalid email'], 422);
+        }
+
+        $source = Source::where('customer_id', $store->customer_id)->first();
+        if (!$source) {
+            return response()->json(['error' => 'Source not found'], 404);
+        }
+
+        EcommerceEvent::record([
+            'email'             => $email,
+            'event_type'        => 'product_viewed',
+            'source_product_id' => $payload['product_id'] ?? null,
+            'product_title'     => $payload['product_title'] ?? $payload['title'] ?? null,
+            'meta'              => [
+                'url'   => $payload['page_url'] ?? $payload['url'] ?? null,
+                'price' => $payload['price'] ?? null,
+            ],
+        ], $source);
+
+        Log::info("Product view event recorded for {$email} (product: " . ($payload['product_title'] ?? $payload['product_id'] ?? 'unknown') . ")");
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Product view recorded.',
+            'email'   => $email,
         ]);
     }
 }
