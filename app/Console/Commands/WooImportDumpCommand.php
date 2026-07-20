@@ -192,10 +192,10 @@ class WooImportDumpCommand extends Command
 
                 if ($wooOrderId > 0 && $wooProductId > 0) {
                     WooOrderItem::updateOrCreate(
-                        ['store_id' => $storeId, 'woo_order_id' => $wooOrderId, 'woo_product_id' => $wooProductId],
+                        ['store_id' => $storeId, 'order_id' => $wooOrderId, 'woo_product_id' => $wooProductId],
                         [
-                            'quantity' => max(1, $qty),
-                            'subtotal' => $netRevenue,
+                            'qty' => max(1, $qty),
+                            'price' => $netRevenue,
                             'total' => $grossRevenue,
                         ]
                     );
@@ -322,11 +322,11 @@ class WooImportDumpCommand extends Command
                 );
 
                 WooOrderItem::updateOrCreate(
-                    ['store_id' => $storeId, 'woo_order_id' => $orderId, 'woo_product_id' => $p['id']],
+                    ['store_id' => $storeId, 'order_id' => $orderId, 'woo_product_id' => $p['id']],
                     [
-                        'product_name' => $p['name'],
-                        'quantity' => $qty,
-                        'subtotal' => $orderTotal,
+                        'name' => $p['name'],
+                        'qty' => $qty,
+                        'price' => $p['price'],
                         'total' => $orderTotal,
                     ]
                 );
