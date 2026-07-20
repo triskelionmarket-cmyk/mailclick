@@ -71,9 +71,16 @@ class WooConnectController extends Controller
             $store->store_url = $storeUrl;
         }
 
+        if ($request->has('consumer_key')) {
+            $store->consumer_key = $request->get('consumer_key');
+        }
+        if ($request->has('consumer_secret')) {
+            $store->consumer_secret = $request->get('consumer_secret');
+        }
+
         $store->store_name = $storeName;
-        $store->api_token = Str::random(60);
-        $store->webhook_secret = 'whsec_' . Str::random(40);
+        $store->api_token = $store->api_token ?: Str::random(60);
+        $store->webhook_secret = $store->webhook_secret ?: 'whsec_' . Str::random(40);
         $store->sync_status = 'idle';
         $store->save();
 
@@ -93,5 +100,34 @@ class WooConnectController extends Controller
         $redirectUrl = $request->get('callback_url') . (str_contains($request->get('callback_url'), '?') ? '&' : '?') . $query;
 
         return redirect()->away($redirectUrl);
+    }
+
+    /**
+     * API Endpoint for WP plugin to update store keys / webhook secrets.
+     */
+    public function updateKeys(Request $request)
+    {
+        $request->validate([
+            'store_uid' => 'required|string',
+            'consumer_key' => 'nullable|string',
+            'consumer_secret' => 'nullable|string',
+        ]);
+
+        $store = WooStore::where('uid', $request->get('store_uid'))->firstOrFail();
+
+        if ($request->has('consumer_key')) {
+            $store->consumer_key = $request->get('consumer_key');
+        }
+        if ($request->has('consumer_secret')) {
+            $store->consumer_secret = $request->get('consumer_secret');
+        }
+
+        $store->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Cheile magazinului au fost actualizate.',
+            'store_uid' => $store->uid,
+        ]);
     }
 }

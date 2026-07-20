@@ -140,8 +140,8 @@ Route::group(['namespace' => '\Acelle\Http\Controllers\Api', 'prefix' => 'v1', '
     // Dashboard
     Route::get('dashboard', 'DashboardController@index');
 
-    // Automation
-    Route::get('automations', 'AutomationController@index');
+    // WooCommerce Integration
+    Route::post('woo/keys', '\Acelle\Http\Controllers\WooConnectController@updateKeys');
 });
 
 Route::group(['namespace' => '\Acelle\Http\Controllers\Api', 'prefix' => 'v1', 'middleware' => []], function () {
