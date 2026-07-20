@@ -413,6 +413,9 @@ class Automation2Controller extends Controller
             'woo-replenishment' => [
                 'options.source_uid' => 'required',
             ],
+            'woo-price-drop' => [
+                'options.source_uid' => 'required',
+            ],
             Automation2::TRIGGER_TAG_BASED => [
                 'options.tags' => 'required',
             ],

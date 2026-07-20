@@ -69,6 +69,7 @@ class Automation2 extends Model
     public const TRIGGER_WOO_ORDER_COMPLETED = 'woo-order-completed';
     public const TRIGGER_WOO_BROWSE_ABANDONMENT = 'woo-browse-abandonment';
     public const TRIGGER_WOO_REPLENISHMENT = 'woo-replenishment';
+    public const TRIGGER_WOO_PRICE_DROP = 'woo-price-drop';
     public const TRIGGER_REMOVE_TAG = 'remove-tag';
     public const TRIGGER_ATTRIBUTE_UPDATE = 'attribute-update';
 
@@ -605,6 +606,9 @@ class Automation2 extends Model
                 break;
             case self::TRIGGER_WOO_REPLENISHMENT:
                 $this->checkForReplenishment();
+                break;
+            case self::TRIGGER_WOO_PRICE_DROP:
+                $this->checkForPriceDrops();
                 break;
             case self::TRIGGER_TAG_BASED:
                 break;
@@ -1728,6 +1732,61 @@ class Automation2 extends Model
     }
 
     /**
+     * Check for price drops on products and trigger automations for interested contacts.
+     */
+    public function checkForPriceDrops()
+    {
+        $this->logger()->info('Checking for product price drops...');
+
+        $sourceUid = $this->getTriggerAction()->getOption('source_uid');
+        if (empty($sourceUid)) {
+            $this->logger()->warning('Price drop trigger has no source_uid configured');
+            return;
+        }
+
+        $source = \Acelle\Model\Source::findByUid($sourceUid);
+        if (!$source) {
+            $this->logger()->warning("Source not found for UID: {$sourceUid}");
+            return;
+        }
+
+        // Find WooCommerce products on sale (sale_price > 0 and sale_price < regular_price)
+        $discountedProducts = \Acelle\Model\WooProduct::whereHas('store', function ($q) use ($source) {
+            $q->where('customer_id', $source->customer_id);
+        })->whereNotNull('sale_price')
+          ->where('sale_price', '>', 0)
+          ->whereRaw('sale_price < regular_price')
+          ->get();
+
+        foreach ($discountedProducts as $product) {
+            // Find contacts who previously viewed this product
+            $events = \Acelle\Model\EcommerceEvent::where('source_id', $source->id)
+                ->where('source_product_id', $product->woo_product_id)
+                ->whereNotNull('email')
+                ->get();
+
+            foreach ($events as $event) {
+                $subscriber = Subscriber::where('mail_list_id', $this->mail_list_id)
+                    ->where('email', strtolower(trim($event->email)))
+                    ->first();
+
+                if (!$subscriber) {
+                    continue;
+                }
+
+                // Check if already triggered
+                $existingTrigger = $this->getAutoTriggerFor($subscriber);
+                if (!is_null($existingTrigger)) {
+                    continue;
+                }
+
+                $this->initTrigger($subscriber);
+                $this->logger()->info(sprintf('Triggered price drop automation for %s (product: %s, old price: %s, new price: %s)', $subscriber->email, $product->name, $product->regular_price, $product->sale_price));
+            }
+        }
+    }
+
+    /**
      * Get first email.
      *
      * @return email
@@ -1806,6 +1865,7 @@ class Automation2 extends Model
             $types[] = 'woo-order-completed';
             $types[] = 'woo-browse-abandonment';
             $types[] = 'woo-replenishment';
+            $types[] = 'woo-price-drop';
         }
 
         return $types;
@@ -1872,6 +1932,11 @@ class Automation2 extends Model
                 'key' => 'replenishment',
                 'icon' => 'autorenew',
                 'trigger_type' => 'woo-replenishment',
+            ],
+            [
+                'key' => 'price-drop',
+                'icon' => 'sell',
+                'trigger_type' => 'woo-price-drop',
             ],
         ];
     }
@@ -2387,6 +2452,37 @@ class Automation2 extends Model
                     [
                         'id' => $emailId1,
                         'title' => trans('messages.automation.template.replenishment.email1'),
+                        'type' => 'ElementAction',
+                        'child' => null,
+                        'options' => [
+                            'key' => 'send-an-email',
+                            'init' => 'true',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                ];
+
+            case 'price-drop':
+                $emailId1 = $uid();
+
+                return [
+                    [
+                        'id' => 'trigger',
+                        'title' => trans('messages.automation.trigger.tree.woo-price-drop'),
+                        'type' => 'ElementTrigger',
+                        'child' => $emailId1,
+                        'options' => [
+                            'key' => 'woo-price-drop',
+                            'type' => 'woo-price-drop',
+                            'init' => true,
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $emailId1,
+                        'title' => trans('messages.automation.template.price-drop.email1'),
                         'type' => 'ElementAction',
                         'child' => null,
                         'options' => [
