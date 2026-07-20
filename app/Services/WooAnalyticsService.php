@@ -31,12 +31,12 @@ class WooAnalyticsService
 
         $recoveredCarts = DB::table('ecommerce_events')
             ->where('source_id', $storeId)
-            ->where('event', 'cart_recovered')
+            ->where('event_type', 'cart_recovered')
             ->count();
 
         $abandonedCarts = DB::table('ecommerce_events')
             ->where('source_id', $storeId)
-            ->where('event', 'cart_abandoned')
+            ->where('event_type', 'cart_abandoned')
             ->count();
 
         $cartRecoveryRate = $abandonedCarts > 0 ? round(($recoveredCarts / $abandonedCarts) * 100, 2) : 0.0;
