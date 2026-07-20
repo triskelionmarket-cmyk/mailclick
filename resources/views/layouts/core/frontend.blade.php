@@ -7,15 +7,21 @@
 
 	@yield('head')
 
-	@if (getThemeMode(Auth::user()->customer->theme_mode, request()->session()->get('customer-auto-theme-mode')) == 'dark')
-		<meta name="theme-color" content="{{ getThemeColor(
-			Auth::user()->customer->getColorScheme()) }}">
-	@elseif (Auth::user()->customer->getMenuLayout() == 'left')
+	@php
+		$themeCustomer = Auth::user()->customer;
+		$themeMode = $themeCustomer ? $themeCustomer->theme_mode : 'light';
+		$colorScheme = $themeCustomer ? $themeCustomer->getColorScheme() : 'default';
+		$menuLayout = $themeCustomer ? $themeCustomer->getMenuLayout() : 'left';
+	@endphp
+
+	@if (getThemeMode($themeMode, request()->session()->get('customer-auto-theme-mode')) == 'dark')
+		<meta name="theme-color" content="{{ getThemeColor($colorScheme) }}">
+	@elseif ($menuLayout == 'left')
 		<meta name="theme-color" content="#eff3f5">
 	@endif
 
 	<script>
-		@if (Auth::user()->customer->theme_mode == 'auto')
+		@if ($themeMode == 'auto')
 			var ECHARTS_THEME = isDarkMode() ? 'dark' : null
 
 			// auto detect dark-mode
@@ -23,17 +29,17 @@
 				autoDetechDarkMode('{{ action('AccountController@saveAutoThemeMode') }}');
 			});
 		@else
-			var ECHARTS_THEME = '{{ Auth::user()->customer->theme_mode == 'dark' ? 'dark' : null }}';
+			var ECHARTS_THEME = '{{ $themeMode == 'dark' ? 'dark' : null }}';
 		@endif
 	</script>
 
     <!-- Theme -->
-    <link rel="stylesheet" type="text/css" href="{{ AppUrl::asset('core/css/theme/'.Auth::user()->customer->getColorScheme().'.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ AppUrl::asset('core/css/theme/' . $colorScheme . '.css') }}">
 </head>
-<body class="theme-{{ Auth::user()->customer->getColorScheme() }} {{ Auth::user()->customer->getMenuLayout() }}bar
-	{{ Auth::user()->customer->getMenuLayout() }}bar-{{ request()->session()->get('customer-leftbar-state') }} state-{{ request()->session()->get('customer-leftbar-state') }}
+<body class="theme-{{ $colorScheme }} {{ $menuLayout }}bar
+	{{ $menuLayout }}bar-{{ request()->session()->get('customer-leftbar-state') }} state-{{ request()->session()->get('customer-leftbar-state') }}
 	fullscreen-search-box
-	mode-{{ getThemeMode(Auth::user()->customer->theme_mode, request()->session()->get('customer-auto-theme-mode'))  }}
+	mode-{{ getThemeMode($themeMode, request()->session()->get('customer-auto-theme-mode'))  }}
 ">
 	@if(config('app.cartpaye'))
 		@include('layouts.core._menu_frontend_cartpaye')
