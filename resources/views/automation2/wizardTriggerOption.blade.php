@@ -34,28 +34,31 @@
 		$(function() {
             // automation segment
             var automationSegment = new Box($('#trigger-select .automation-segment'));
-            $('#trigger-select [name=mail_list_uid]').change(function(e) {
+            $(document).off('change', '#trigger-select [name=mail_list_uid]').on('change', '#trigger-select [name=mail_list_uid]', function(e) {
                 var url = '{{ action('Automation2Controller@segmentSelect') }}?list_uid=' + $(this).val();
 
                 automationSegment.load(url);
             });
             $('#trigger-select [name=mail_list_uid]').change();
 
-            $('#trigger-select').on('submit', function(e) {
+            $(document).off('submit', '#trigger-select').on('submit', '#trigger-select', function(e) {
                 e.preventDefault();
                 var url = $(this).attr('action');
                 var data = $(this).serialize();
 
-                // copy
                 $.ajax({
                     url: url,
                     type: 'POST',
                     data: data,
                     globalError: false
                 }).done(function(response) {
-                    createAutomationPopup.loadHtml(response);
+                    if (typeof createAutomationPopup !== 'undefined' && createAutomationPopup) {
+                        createAutomationPopup.loadHtml(response);
+                    }
                 }).fail(function(response){
-                    createAutomationPopup.loadHtml(response.responseText);
+                    if (typeof createAutomationPopup !== 'undefined' && createAutomationPopup) {
+                        createAutomationPopup.loadHtml(response.responseText);
+                    }
                 }).always(function() {
                 });
             });

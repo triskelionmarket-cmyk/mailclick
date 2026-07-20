@@ -33,18 +33,24 @@
 </div>
 
 <script>
-    $(function () {
-        $('[data-control="template-select"]').on('click', function (e) {
-            e.preventDefault();
-            var url = $(this).attr('href');
+    $(document).off('click', '[data-control="template-select"]').on('click', '[data-control="template-select"]', function (e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        if (typeof createAutomationPopup !== 'undefined' && createAutomationPopup) {
             createAutomationPopup.load(url);
-        });
+        } else {
+            window.location.href = url;
+        }
+    });
 
-        $('[data-control="back-to-triggers"]').on('click', function (e) {
-            e.preventDefault();
-            var url = $(this).attr('href');
+    $(document).off('click', '[data-control="back-to-triggers"]').on('click', '[data-control="back-to-triggers"]', function (e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        if (typeof createAutomationPopup !== 'undefined' && createAutomationPopup) {
             createAutomationPopup.load(url);
-        });
+        } else {
+            window.location.href = url;
+        }
     });
 </script>
 @endsection

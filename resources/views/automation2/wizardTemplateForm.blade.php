@@ -77,14 +77,16 @@
 </div>
 
 <script>
-    $('#automationTemplateCreate').submit(function (e) {
+    $(document).off('submit', '#automationTemplateCreate').on('submit', '#automationTemplateCreate', function (e) {
         e.preventDefault();
 
         var form = $(this);
         var url = form.attr('action');
 
         // loading effect
-        createAutomationPopup.loading();
+        if (typeof createAutomationPopup !== 'undefined' && createAutomationPopup) {
+            createAutomationPopup.loading();
+        }
 
         $.ajax({
             url: url,
@@ -94,11 +96,15 @@
             statusCode: {
                 // validate error
                 400: function (res) {
-                    createAutomationPopup.loadHtml(res.responseText);
+                    if (typeof createAutomationPopup !== 'undefined' && createAutomationPopup) {
+                        createAutomationPopup.loadHtml(res.responseText);
+                    }
                 }
             },
             success: function (res) {
-                createAutomationPopup.hide();
+                if (typeof createAutomationPopup !== 'undefined' && createAutomationPopup) {
+                    createAutomationPopup.hide();
+                }
 
                 addMaskLoading(res.message, function () {
                     setTimeout(function () {
@@ -107,7 +113,9 @@
                 });
             }
         }).always(function () {
-            createAutomationPopup.unmask();
+            if (typeof createAutomationPopup !== 'undefined' && createAutomationPopup) {
+                createAutomationPopup.unmask();
+            }
         });
     });
 </script>

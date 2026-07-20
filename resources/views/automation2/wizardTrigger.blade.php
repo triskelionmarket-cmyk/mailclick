@@ -54,20 +54,27 @@
 			</div>
 		</div>
 	</div>
+</div>
 
-	<script>
-		$(function () {
-			$('[data-control="trigger-select"]').on('click', function (e) {
-				e.preventDefault();
-				var url = $(this).attr('href');
-				createAutomationPopup.load(url);
-			});
+<script>
+	$(document).off('click', '[data-control="trigger-select"]').on('click', '[data-control="trigger-select"]', function (e) {
+		e.preventDefault();
+		var url = $(this).attr('href');
+		if (typeof createAutomationPopup !== 'undefined' && createAutomationPopup) {
+			createAutomationPopup.load(url);
+		} else {
+			window.location.href = url;
+		}
+	});
 
-			$('[data-control="template-select"]').on('click', function (e) {
-				e.preventDefault();
-				var url = $(this).attr('href');
-				createAutomationPopup.load(url);
-			});
-		});
-	</script>
-	@endsection
+	$(document).off('click', '[data-control="template-select"]').on('click', '[data-control="template-select"]', function (e) {
+		e.preventDefault();
+		var url = $(this).attr('href');
+		if (typeof createAutomationPopup !== 'undefined' && createAutomationPopup) {
+			createAutomationPopup.load(url);
+		} else {
+			window.location.href = url;
+		}
+	});
+</script>
+@endsection
