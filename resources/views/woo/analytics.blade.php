@@ -259,6 +259,12 @@
                                     <span class="text-muted d-block mt-1" style="font-size:12px;">{{ trans('messages.woo.col_purchase_cost') }}</span>
                                 </td>
                                 <td>
+                                    <input type="number" step="1" min="1" class="form-control form-control-sm replenishment-input"
+                                           style="max-width: 90px; height: 33px;"
+                                           data-id="{{ $product->id }}" value="{{ $product->replenishment_days }}" placeholder="30">
+                                    <span class="text-muted d-block mt-1" style="font-size:12px;">Ciclul (Zile)</span>
+                                </td>
+                                <td>
                                     <h5 class="no-margin stat-num profit-margin-badge-{{ $product->id }}">
                                         @if($margin >= 35)
                                             <span class="text-success">{{ $margin }}%</span>
@@ -433,6 +439,8 @@
                 var id = btn.data('id');
                 var input = $('.cost-input[data-id="' + id + '"]');
                 var cost = input.val();
+                var replInput = $('.replenishment-input[data-id="' + id + '"]');
+                var replDays = replInput.val();
 
                 btn.prop('disabled', true).html('<span class="material-symbols-rounded">sync</span>');
 
@@ -441,15 +449,22 @@
                     type: 'POST',
                     data: { _token: '{{ csrf_token() }}', purchase_cost: cost },
                     success: function(res) {
-                        btn.prop('disabled', false).html('<span class="material-symbols-rounded me-1">check</span> {{ trans('messages.woo.saved') }}');
                         $('.profit-margin-badge-' + id).html('<span class="text-success">' + res.profit_margin + '</span>');
+                    }
+                });
+
+                $.ajax({
+                    url: '/woo/products/' + id + '/replenishment-days',
+                    type: 'POST',
+                    data: { _token: '{{ csrf_token() }}', replenishment_days: replDays },
+                    success: function(res) {
+                        btn.prop('disabled', false).html('<span class="material-symbols-rounded me-1">check</span> {{ trans('messages.woo.saved') }}');
                         setTimeout(function() {
                             btn.html('<span class="material-symbols-rounded me-1">save</span> {{ trans('messages.woo.btn_save') }}');
                         }, 2000);
                     },
                     error: function(err) {
                         btn.prop('disabled', false).html('<span class="material-symbols-rounded me-1">save</span> {{ trans('messages.woo.btn_save') }}');
-                        notify({ type: 'danger', message: '{{ trans('messages.woo.cost_save_error') }}' });
                     }
                 });
             });

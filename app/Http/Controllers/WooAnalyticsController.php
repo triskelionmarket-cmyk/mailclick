@@ -116,6 +116,42 @@ class WooAnalyticsController extends Controller
     }
 
     /**
+     * Inline Update Replenishment Cycle (Days) for WooCommerce Product.
+     */
+    public function updateReplenishmentDays(Request $request, $id)
+    {
+        $request->validate([
+            'replenishment_days' => 'nullable|integer|min:0',
+        ]);
+
+        $customer = Auth::user()->customer;
+        $wooProduct = WooProduct::whereHas('store', function ($q) use ($customer) {
+            $q->where('customer_id', $customer->id);
+        })->findOrFail($id);
+
+        $days = $request->input('replenishment_days') ? (int) $request->input('replenishment_days') : null;
+        $wooProduct->replenishment_days = $days;
+        $wooProduct->save();
+
+        // Also sync to main Product model if exists
+        $mainProduct = \Acelle\Model\Product::where('source_id', $wooProduct->store->source_id ?? null)
+            ->where('source_item_id', $wooProduct->woo_product_id)
+            ->first();
+
+        if ($mainProduct) {
+            $mainProduct->replenishment_days = $days;
+            $mainProduct->save();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ciclul de reaprovizionare a fost actualizat.',
+            'product_id' => $wooProduct->id,
+            'replenishment_days' => $days,
+        ]);
+    }
+
+    /**
      * Import Purchase Costs via CSV file (columns: sku, purchase_cost or woo_product_id, purchase_cost).
      */
     public function importPurchaseCosts(Request $request)

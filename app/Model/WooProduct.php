@@ -23,6 +23,7 @@ class WooProduct extends Model
         'images_json',
         'rfm_score',
         'conversion_rate',
+        'replenishment_days',
     ];
 
     protected $casts = [

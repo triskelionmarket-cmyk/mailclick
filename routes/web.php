@@ -236,6 +236,7 @@ Route::group(['namespace' => '\Acelle\Http\Controllers', 'middleware' => ['not_i
     Route::get('ecommerce/analytics', 'WooAnalyticsController@index');
     Route::get('woo/analytics', 'WooAnalyticsController@index');
     Route::post('woo/products/{id}/purchase-cost', 'WooAnalyticsController@updatePurchaseCost');
+    Route::post('woo/products/{id}/replenishment-days', 'WooAnalyticsController@updateReplenishmentDays');
     Route::post('woo/products/import-cost-prices', 'WooAnalyticsController@importPurchaseCosts');
 });
 
