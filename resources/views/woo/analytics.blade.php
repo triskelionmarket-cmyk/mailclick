@@ -2,423 +2,532 @@
     'menu' => 'source',
 ])
 
-@section('title', 'Analiză Magazin & Recomandări')
+@section('title', trans('messages.analytics_recommendations'))
+
+@section('head')
+    <script type="text/javascript" src="{{ AppUrl::asset('core/echarts/echarts.min.js') }}"></script>
+    <script type="text/javascript" src="{{ AppUrl::asset('core/echarts/dark.js') }}"></script>
+@endsection
 
 @section('page_header')
     <div class="page-title">
         <ul class="breadcrumb breadcrumb-caret position-right">
             <li class="breadcrumb-item"><a href="{{ action("HomeController@index") }}">{{ trans('messages.home') }}</a></li>
-            <li class="breadcrumb-item"><a href="{{ action("SourceController@index") }}">{{ trans('messages.sources') }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ action("SourceController@index") }}">{{ trans('messages.stores_connections') }}</a></li>
         </ul>
         <h1>
-            <span class="material-symbols-rounded me-2">analytics</span>
-            <span class="text-semibold">Analiză Magazin & Recomandări</span>
+            <span class="material-symbols-rounded">analytics</span> {{ trans('messages.analytics_recommendations') }}
         </h1>
     </div>
 @endsection
 
 @section('content')
-<!-- Filter & Action Controls -->
-<div class="d-flex top-list-controls top-sticky-content mb-4 align-items-center">
-    <div class="me-auto">
-        <div class="filter-box">
-            @if(isset($stores) && $stores->count() > 1)
-                <span class="filter-group me-3">
-                    <span class="title text-semibold text-muted">Magazin:</span>
-                    <select class="select form-select d-inline-block w-auto" name="store_id" onchange="window.location.href='{{ url('ecommerce/analytics') }}?store_id=' + this.value">
-                        @foreach($stores as $st)
-                            <option value="{{ $st->id }}" {{ $st->id == $selectedStore->id ? 'selected' : '' }}>
-                                {{ $st->store_name }} ({{ $st->store_url }})
-                            </option>
+    <div id="AnalyticsContainer" class="listing-form top-sticky">
+        <div class="d-flex top-list-controls top-sticky-content">
+            <div class="me-auto">
+                <div class="filter-box">
+                    @if(isset($stores) && $stores->count() > 1)
+                        <span class="filter-group">
+                            <span class="title text-semibold text-muted">Magazin:</span>
+                            <select class="select" name="store_id" onchange="window.location.href='{{ url('ecommerce/analytics') }}?store_id=' + this.value">
+                                @foreach($stores as $st)
+                                    <option value="{{ $st->id }}" {{ $st->id == $selectedStore->id ? 'selected' : '' }}>
+                                        {{ $st->store_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </span>
+                    @endif
+                    <span class="text-nowrap search-container">
+                        <input type="text" name="keyword" class="form-control search" value="{{ request()->keyword }}" placeholder="{{ trans('messages.type_to_search') }}" />
+                        <span class="material-symbols-rounded">search</span>
+                    </span>
+                </div>
+            </div>
+            <div class="text-end">
+                <a href="{{ action('SourceController@sync', ['uid' => \Acelle\Model\Source::where('customer_id', Auth::user()->customer->id)->first()?->uid ?? '']) }}"
+                   link-method="POST"
+                   class="btn btn-secondary m-icon sync-button me-1">
+                    <span class="material-symbols-rounded">sync</span> {{ trans('messages.source.sync') }}
+                </a>
+                <button type="button" class="btn btn-primary m-icon" data-bs-toggle="modal" data-bs-target="#importCsvModal">
+                    <span class="material-symbols-rounded">upload_file</span> Import Costuri CSV
+                </button>
+            </div>
+        </div>
+
+        {{-- KPI Summary --}}
+        <h2 class="mt-4 pt-2">{!! trans('messages.frontend_dashboard_hello', ['name' => Auth::user()->displayName(get_localization_config('show_last_name_first', Auth::user()->customer->getLanguageCode()))]) !!}</h2>
+        <p>Mai jos găsești o privire de ansamblu asupra performanței magazinului tău conectat.</p>
+
+        <h3 class="mt-5 mb-3">
+            <span class="material-symbols-rounded me-2">donut_large</span>
+            Indicatori Cheie de Performanță
+        </h3>
+
+        <div class="row quota_box">
+            <div class="col-12 col-md-6">
+                <div class="content-group-sm mb-3">
+                    <div class="d-flex mb-2">
+                        <label class="fw-600 me-auto">Venit Total</label>
+                        <div class="pull-right text-semibold">
+                            <span class="text-muted">{{ number_format($totalRevenue, 0) }} RON</span>
+                        </div>
+                    </div>
+                    <div class="progress progress-sm" style="height: 12px;">
+                        <div class="progress-bar progress-bar-striped bg-{{ $totalRevenue > 100000 ? 'primary' : 'info' }}" style="width: {{ min(100, $totalOrders > 0 ? 77 : 0) }}%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="content-group-sm mb-3">
+                    <div class="d-flex mb-2">
+                        <label class="fw-600 me-auto">Comenzi Finalizate</label>
+                        <div class="pull-right text-semibold">
+                            <span class="text-muted">{{ number_format($totalOrders) }} comenzi</span>
+                        </div>
+                    </div>
+                    <div class="progress progress-sm" style="height: 12px;">
+                        <div class="progress-bar progress-bar-striped bg-primary" style="width: {{ min(100, $totalOrders > 0 ? 65 : 0) }}%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="content-group-sm">
+                    <div class="d-flex mb-2">
+                        <label class="fw-600 me-auto">Clienți Activi</label>
+                        <div class="pull-right text-semibold">
+                            <span class="text-muted">{{ number_format($totalCustomers) }} clienți</span>
+                        </div>
+                    </div>
+                    <div class="progress progress-sm" style="height: 12px;">
+                        <div class="progress-bar progress-bar-striped bg-primary" style="width: {{ min(100, $totalCustomers > 0 ? 45 : 0) }}%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="content-group-sm">
+                    <div class="d-flex mb-2">
+                        <label class="fw-600 me-auto">CLV Mediu Estimat</label>
+                        <div class="pull-right text-semibold">
+                            <span class="text-muted">{{ number_format($avgClv, 2) }} RON</span>
+                        </div>
+                    </div>
+                    <div class="progress progress-sm" style="height: 12px;">
+                        <div class="progress-bar progress-bar-striped bg-{{ $avgClv > 10000 ? 'danger' : 'primary' }}" style="width: {{ min(100, $avgClv > 0 ? 55 : 0) }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Tabs --}}
+        <h3 class="mt-5 mb-3">
+            <span class="material-symbols-rounded me-2">star_half</span>
+            Date Detaliate Magazin
+        </h3>
+
+        <ul class="nav nav-tabs nav-underline" id="analyticsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="rfm-tab" data-bs-toggle="tab" data-bs-target="#rfm_pane" role="tab" aria-controls="rfm_pane" aria-selected="true">
+                    Segmentare RFM
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="catalog-tab" data-bs-toggle="tab" data-bs-target="#catalog_pane" role="tab" aria-controls="catalog_pane" aria-selected="false">
+                    Catalog Produse
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="recommendations-tab" data-bs-toggle="tab" data-bs-target="#recommendations_pane" role="tab" aria-controls="recommendations_pane" aria-selected="false">
+                    Recomandări
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders_pane" role="tab" aria-controls="orders_pane" aria-selected="false">
+                    Comenzi Recente
+                </a>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="analyticsTabsContent">
+
+            {{-- ═══════════════════════════════════════════════ --}}
+            {{-- TAB 1: RFM Customer Segments                   --}}
+            {{-- ═══════════════════════════════════════════════ --}}
+            <div class="tab-pane fade show active" id="rfm_pane" role="tabpanel" aria-labelledby="rfm-tab">
+
+                {{-- RFM Chart --}}
+                <div id="rfmChart" style="width:100%;height:280px;margin:20px 0;"></div>
+
+                {{-- RFM Segment Summary Cards --}}
+                <div class="row mt-2 mb-4">
+                    @php
+                        $segments = [
+                            ['key' => 'champions', 'label' => 'Champions', 'desc' => 'Cumpărători recenți & fideli', 'icon' => 'emoji_events', 'color' => '#28a745'],
+                            ['key' => 'loyal',     'label' => 'Loiali',     'desc' => 'Clienți constanți',           'icon' => 'loyalty',      'color' => '#007bff'],
+                            ['key' => 'at_risk',   'label' => 'La Risc',    'desc' => 'Inactivi de >60 zile',        'icon' => 'warning',      'color' => '#ffc107'],
+                            ['key' => 'lost',      'label' => 'Pierduți',   'desc' => 'Risc mare de pierdere',       'icon' => 'person_off',   'color' => '#dc3545'],
+                        ];
+                    @endphp
+                    @foreach($segments as $seg)
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="card px-0 shadow-sm">
+                                <div class="card-body pt-2">
+                                    <div class="d-flex align-items-center pt-1">
+                                        <span class="material-symbols-rounded me-2" style="font-size:22px;color:{{ $seg['color'] }};">{{ $seg['icon'] }}</span>
+                                        <label class="panel-title text-semibold my-0 fw-600">{{ $seg['label'] }}</label>
+                                    </div>
+                                    <h4 class="no-margin text-bold mt-2">{{ $rfmSegments[$seg['key']] }}</h4>
+                                    <span class="text-muted">{{ $seg['desc'] }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Win-back Customer Table --}}
+                <h3 class="mt-4 mb-3">
+                    <span class="material-symbols-rounded me-2">campaign</span>
+                    Clienți Țintă Win-Back
+                </h3>
+
+                @if(count($winbackCustomers) > 0)
+                    <table class="table table-box pml-table mt-2"
+                        current-page="1"
+                    >
+                        @foreach($winbackCustomers as $key => $cust)
+                            <tr>
+                                <td width="1%">
+                                    <div class="product-image-list mr-3">
+                                        <span class="material-symbols-rounded" style="font-size:28px;color:#999;">person</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a class="kq_search fw-600 d-block list-title" href="javascript:void(0)">
+                                        {{ $cust['first_name'] }} {{ $cust['last_name'] }}
+                                    </a>
+                                    <span class="text-muted d-block mt-1">{{ $cust['email'] }}</span>
+                                </td>
+                                <td>
+                                    <h5 class="no-margin stat-num">{{ $cust['city'] ?? 'România' }}</h5>
+                                    <span class="text-muted d-block mt-2">Oraș</span>
+                                </td>
+                                <td>
+                                    <h5 class="no-margin stat-num">{{ $cust['orders_count'] }}</h5>
+                                    <span class="text-muted d-block mt-2">Comenzi</span>
+                                </td>
+                                <td>
+                                    <h5 class="no-margin stat-num">{{ number_format($cust['total_spent'], 0) }} RON</h5>
+                                    <span class="text-muted d-block mt-2">Total Cheltuit</span>
+                                </td>
+                                <td>
+                                    <h5 class="no-margin stat-num">{{ $cust['rfm_recency'] }} zile</h5>
+                                    <span class="text-muted d-block mt-2">Recență</span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ action('CampaignController@selectType') }}" role="button" class="btn btn-secondary m-icon">
+                                        <span class="material-symbols-rounded me-1">mark_email_unread</span> Trimite
+                                    </a>
+                                </td>
+                            </tr>
                         @endforeach
-                    </select>
-                </span>
-            @endif
+                    </table>
+                @else
+                    <div class="empty-list">
+                        <span class="material-symbols-rounded">auto_awesome</span>
+                        <span class="line-1">
+                            Nu există clienți inactivi pentru campanie win-back.
+                        </span>
+                    </div>
+                @endif
+            </div>
+
+            {{-- ═══════════════════════════════════════════════ --}}
+            {{-- TAB 2: Catalog Produse & Profit Margin         --}}
+            {{-- ═══════════════════════════════════════════════ --}}
+            <div class="tab-pane fade" id="catalog_pane" role="tabpanel" aria-labelledby="catalog-tab">
+                @if($products->count() > 0)
+                    <table class="table table-box pml-table mt-2"
+                        current-page="{{ empty(request()->page) ? 1 : request()->page }}"
+                    >
+                        @foreach($products as $key => $product)
+                            @php
+                                $margin = $product->profit_margin;
+                            @endphp
+                            <tr>
+                                <td width="1%">
+                                    <div class="product-image-list mr-3">
+                                        <span class="material-symbols-rounded" style="font-size:28px;color:#999;">inventory_2</span>
+                                    </div>
+                                </td>
+                                <td width="30%">
+                                    <h5 class="no-margin text-normal">
+                                        <span class="kq_search">{{ $product->name }}</span>
+                                    </h5>
+                                    <span class="text-muted d-block mt-2">
+                                        SKU: {{ $product->sku ?: 'N/A' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <h5 class="no-margin stat-num">{{ number_format($product->price, 2) }} RON</h5>
+                                    <span class="text-muted d-block mt-2">Preț Vânzare</span>
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0" class="form-control form-control-sm cost-input"
+                                           style="max-width: 110px; height: 33px;"
+                                           data-id="{{ $product->id }}" value="{{ $product->purchase_cost }}">
+                                    <span class="text-muted d-block mt-1" style="font-size:12px;">Cost Achiziție</span>
+                                </td>
+                                <td>
+                                    <h5 class="no-margin stat-num profit-margin-badge-{{ $product->id }}">
+                                        @if($margin >= 35)
+                                            <span class="text-success">{{ $margin }}%</span>
+                                        @elseif($margin >= 20)
+                                            <span style="color:#ffc107;">{{ $margin }}%</span>
+                                        @else
+                                            <span class="text-danger">{{ $margin }}%</span>
+                                        @endif
+                                    </h5>
+                                    <span class="text-muted d-block mt-2">Marjă</span>
+                                </td>
+                                <td>
+                                    <h5 class="no-margin stat-num">{{ $product->stock_quantity }}</h5>
+                                    <span class="text-muted d-block mt-2">Stoc</span>
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-secondary m-icon save-cost-btn" data-id="{{ $product->id }}">
+                                        <span class="material-symbols-rounded me-1">save</span> Salvează
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                    @include('elements/_per_page_select', ["items" => $products])
+                @else
+                    <div class="empty-list">
+                        <span class="material-symbols-rounded">category</span>
+                        <span class="line-1">
+                            Niciun produs găsit. Rulați prima sincronizare.
+                        </span>
+                    </div>
+                @endif
+            </div>
+
+            {{-- ═══════════════════════════════════════════════ --}}
+            {{-- TAB 3: Recommendations                         --}}
+            {{-- ═══════════════════════════════════════════════ --}}
+            <div class="tab-pane fade" id="recommendations_pane" role="tabpanel" aria-labelledby="recommendations-tab">
+                @if($topProducts->count() > 0)
+                    <ul class="modern-listing mt-0 top-border-none">
+                        @foreach($topProducts as $num => $prod)
+                            <li>
+                                <div class="row">
+                                    <div class="col-sm-5 col-md-5">
+                                        <div class="d-flex align-items-center">
+                                            <i class="number d-inline-block me-3">{{ $num + 1 }}</i>
+                                            <div>
+                                                <h6 class="mt-0 mb-0 text-semibold">
+                                                    {{ $prod->name }}
+                                                </h6>
+                                                <p class="mb-0">
+                                                    SKU: {{ $prod->sku }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-2 col-md-2 text-left">
+                                        <h5 class="m-0 text-bold">
+                                            {{ number_format($prod->price, 2) }} RON
+                                        </h5>
+                                        <span class="text-muted">Preț</span>
+                                    </div>
+                                    <div class="col-sm-2 col-md-2 text-left">
+                                        <h5 class="m-0 text-bold">
+                                            {{ number_format($prod->rfm_score, 2) }}
+                                        </h5>
+                                        <span class="text-muted">Scor RFM</span>
+                                    </div>
+                                    <div class="col-sm-3 col-md-3 text-end">
+                                        <a href="{{ action('CampaignController@selectType') }}" class="btn btn-secondary m-icon">
+                                            <span class="material-symbols-rounded me-1">campaign</span> Promovează
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <div class="empty-list">
+                        <span class="material-symbols-rounded">auto_awesome</span>
+                        <span class="line-1">
+                            Rulați prima sincronizare pentru a genera recomandări.
+                        </span>
+                    </div>
+                @endif
+            </div>
+
+            {{-- ═══════════════════════════════════════════════ --}}
+            {{-- TAB 4: Recent Orders                           --}}
+            {{-- ═══════════════════════════════════════════════ --}}
+            <div class="tab-pane fade" id="orders_pane" role="tabpanel" aria-labelledby="orders-tab">
+                @if($recentOrders->count() > 0)
+                    <table class="table table-box pml-table mt-2"
+                        current-page="1"
+                    >
+                        @foreach($recentOrders as $key => $ord)
+                            <tr>
+                                <td width="1%">
+                                    <div class="product-image-list mr-3">
+                                        <span class="material-symbols-rounded" style="font-size:28px;color:#999;">receipt_long</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a class="kq_search fw-600 d-block list-title" href="javascript:void(0)">
+                                        {{ $ord->order_number ?: '#' . $ord->woo_order_id }}
+                                    </a>
+                                    <span class="text-muted d-block mt-1">
+                                        {{ $ord->billing_first_name }} {{ $ord->billing_last_name }}
+                                        @if($ord->customer_email) — {{ $ord->customer_email }} @endif
+                                    </span>
+                                </td>
+                                <td>
+                                    <h5 class="no-margin stat-num">{{ number_format($ord->total, 2) }} {{ $ord->currency ?: 'RON' }}</h5>
+                                    <span class="text-muted d-block mt-2">Valoare</span>
+                                </td>
+                                <td>
+                                    <h5 class="no-margin stat-num">
+                                        @if($ord->status == 'completed')
+                                            <span class="text-success">Finalizată</span>
+                                        @elseif($ord->status == 'processing')
+                                            <span style="color:#007bff;">În procesare</span>
+                                        @elseif($ord->status == 'cancelled')
+                                            <span class="text-danger">Anulată</span>
+                                        @else
+                                            {{ ucfirst($ord->status) }}
+                                        @endif
+                                    </h5>
+                                    <span class="text-muted d-block mt-2">Status</span>
+                                </td>
+                                <td>
+                                    <h5 class="no-margin stat-num">
+                                        {{ $ord->created_at ? Auth::user()->customer->formatDateTime($ord->created_at, 'datetime_full') : 'N/A' }}
+                                    </h5>
+                                    <span class="text-muted d-block mt-2">{{ trans('messages.created_at') }}</span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                @else
+                    <div class="empty-list">
+                        <span class="material-symbols-rounded">auto_awesome</span>
+                        <span class="line-1">
+                            Nu există comenzi recente.
+                        </span>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
-    <div class="text-end">
-        <a href="{{ action('SourceController@sync', ['uid' => \Acelle\Model\Source::where('customer_id', Auth::user()->customer->id)->first()?->uid ?? '1']) }}" 
-           class="btn btn-secondary m-icon me-1">
-            <span class="material-symbols-rounded me-1">sync</span> Sincronizare Date
-        </a>
-        <button type="button" class="btn btn-primary m-icon" data-bs-toggle="modal" data-bs-target="#importCsvModal">
-            <span class="material-symbols-rounded me-1">upload_file</span> Import Costuri CSV
-        </button>
-    </div>
-</div>
 
-<!-- Stat KPI Cards (Acelle Dashboard Box Style) -->
-<div class="row mb-4">
-    <div class="col-12 col-md-3">
-        <div class="card px-3 py-3 shadow-sm border-0 mb-2">
-            <div class="d-flex align-items-center">
-                <div class="me-3">
-                    <span class="material-symbols-rounded text-primary" style="font-size: 38px;">payments</span>
-                </div>
-                <div>
-                    <span class="text-muted text-semibold small d-block">VENIT TOTAL</span>
-                    <h3 class="stat-num m-0 fw-bold text-dark">{{ number_format($totalRevenue, 2) }} RON</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-3">
-        <div class="card px-3 py-3 shadow-sm border-0 mb-2">
-            <div class="d-flex align-items-center">
-                <div class="me-3">
-                    <span class="material-symbols-rounded text-success" style="font-size: 38px;">shopping_bag</span>
-                </div>
-                <div>
-                    <span class="text-muted text-semibold small d-block">TOTAL COMENZI</span>
-                    <h3 class="stat-num m-0 fw-bold text-dark">{{ number_format($totalOrders) }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-3">
-        <div class="card px-3 py-3 shadow-sm border-0 mb-2">
-            <div class="d-flex align-items-center">
-                <div class="me-3">
-                    <span class="material-symbols-rounded text-info" style="font-size: 38px;">group</span>
-                </div>
-                <div>
-                    <span class="text-muted text-semibold small d-block">CLIENȚI B2B & RETAIL</span>
-                    <h3 class="stat-num m-0 fw-bold text-dark">{{ number_format($totalCustomers) }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-3">
-        <div class="card px-3 py-3 shadow-sm border-0 mb-2">
-            <div class="d-flex align-items-center">
-                <div class="me-3">
-                    <span class="material-symbols-rounded text-warning" style="font-size: 38px;">trending_up</span>
-                </div>
-                <div>
-                    <span class="text-muted text-semibold small d-block">CLV MEDIU ESTIMAT</span>
-                    <h3 class="stat-num m-0 fw-bold text-dark">{{ number_format($avgClv, 2) }} RON</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Tabs (Acelle Native Nav Underline Style) -->
-<ul class="nav nav-tabs nav-underline mb-4" id="analyticsTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <a class="nav-link active fw-600" id="rfm-tab" data-bs-toggle="tab" data-bs-target="#rfm_pane" role="tab" aria-controls="rfm_pane" aria-selected="true">
-            <span class="material-symbols-rounded me-2">pie_chart</span> Segmentare RFM Clienți
-        </a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link fw-600" id="catalog-tab" data-bs-toggle="tab" data-bs-target="#catalog_pane" role="tab" aria-controls="catalog_pane" aria-selected="false">
-            <span class="material-symbols-rounded me-2">inventory_2</span> Catalog Produse & Marje
-        </a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link fw-600" id="recommendations-tab" data-bs-toggle="tab" data-bs-target="#recommendations_pane" role="tab" aria-controls="recommendations_pane" aria-selected="false">
-            <span class="material-symbols-rounded me-2">recommend</span> Recomandări Cross-Sell
-        </a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link fw-600" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders_pane" role="tab" aria-controls="orders_pane" aria-selected="false">
-            <span class="material-symbols-rounded me-2">history</span> Istoric Comenzi Recente
-        </a>
-    </li>
-</ul>
-
-<div class="tab-content" id="analyticsTabsContent">
-    <!-- TAB 1: RFM Customer Segments -->
-    <div class="tab-pane fade show active" id="rfm_pane" role="tabpanel" aria-labelledby="rfm-tab">
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card p-3 shadow-sm border-0 border-start border-4 border-success">
-                    <span class="label label-flat bg-success d-inline-block w-auto mb-2">Champions</span>
-                    <h3 class="fw-bold m-0">{{ $rfmSegments['champions'] }} clienți</h3>
-                    <span class="text-muted small">Cumpărători recenți & fideli</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card p-3 shadow-sm border-0 border-start border-4 border-primary">
-                    <span class="label label-flat bg-primary d-inline-block w-auto mb-2">Loyal Customers</span>
-                    <h3 class="fw-bold m-0">{{ $rfmSegments['loyal'] }} clienți</h3>
-                    <span class="text-muted small">Clienți constanți</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card p-3 shadow-sm border-0 border-start border-4 border-warning">
-                    <span class="label label-flat bg-warning d-inline-block w-auto mb-2 text-dark">At Risk</span>
-                    <h3 class="fw-bold m-0">{{ $rfmSegments['at_risk'] }} clienți</h3>
-                    <span class="text-muted small">Inactivi de >60 zile</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card p-3 shadow-sm border-0 border-start border-4 border-danger">
-                    <span class="label label-flat bg-danger d-inline-block w-auto mb-2">Lost / Inactive</span>
-                    <h3 class="fw-bold m-0">{{ $rfmSegments['lost'] }} clienți</h3>
-                    <span class="text-muted small">Risc mare de pierdere</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Win-back Customer List (Acelle Table Style) -->
-        <h4 class="mt-4 mb-3 fw-bold">
-            <span class="material-symbols-rounded me-2 text-warning">campaign</span>
-            Clienți Țintă pentru Campanie Win-Back MailClick
-        </h4>
-
-        <table class="table table-box pml-table mt-2">
-            <thead>
-                <tr>
-                    <th>Client / Companie</th>
-                    <th>Oraș</th>
-                    <th>Comenzi</th>
-                    <th>Total Cheltuit</th>
-                    <th>Recență</th>
-                    <th>CLV Estimat</th>
-                    <th class="text-end">Acțiune</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($winbackCustomers as $cust)
-                    <tr>
-                        <td>
-                            <a class="kq_search fw-600 d-block list-title" href="javascript:void(0)">
-                                {{ $cust['first_name'] }} {{ $cust['last_name'] }}
-                            </a>
-                            <span class="text-muted d-block small">{{ $cust['email'] }}</span>
-                        </td>
-                        <td><span class="label label-flat bg-light text-dark">{{ $cust['city'] ?? 'România' }}</span></td>
-                        <td><span class="fw-bold">{{ $cust['orders_count'] }}</span> comenzi</td>
-                        <td class="fw-bold text-dark">{{ number_format($cust['total_spent'], 2) }} RON</td>
-                        <td><span class="label label-flat bg-warning text-dark">{{ $cust['rfm_recency'] }} zile</span></td>
-                        <td class="fw-bold text-success">{{ number_format($cust['clv_estimated'], 2) }} RON</td>
-                        <td class="text-end">
-                            <a href="{{ action('CampaignController@create') }}?email={{ urlencode($cust['email']) }}" class="btn btn-outline-primary btn-sm m-icon">
-                                <span class="material-symbols-rounded">mark_email_unread</span> Trimite Oferta
-                            </a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">Nu există clienți inactivi.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <!-- TAB 2: Catalog Produse & Profit Margin -->
-    <div class="tab-pane fade" id="catalog_pane" role="tabpanel" aria-labelledby="catalog-tab">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold m-0">
-                <span class="material-symbols-rounded me-2 text-primary">inventory_2</span>
-                Catalog Produse & Marje de Profit
-            </h4>
-            <div>
-                <form action="{{ url('ecommerce/analytics') }}" method="GET" class="d-inline-block">
-                    <input type="text" name="keyword" value="{{ request('keyword') }}" class="form-control form-control-sm d-inline-block w-auto" placeholder="Căutare după nume sau SKU...">
-                    <button type="submit" class="btn btn-sm btn-secondary">Caută</button>
+    {{-- CSV Import Modal --}}
+    <div class="modal fade" id="importCsvModal" tabindex="-1" aria-labelledby="importCsvModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@importPurchaseCosts') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="store_id" value="{{ $selectedStore->id }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-600" id="importCsvModalLabel">
+                            <span class="material-symbols-rounded me-2">upload_file</span>
+                            Importă Costuri de Achiziție (CSV)
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body py-3">
+                        <p class="text-muted">Încarcă un fișier CSV cu coloanele <code>purchase_cost</code> și <code>sku</code> (sau <code>woo_product_id</code>).</p>
+                        <div class="form-group">
+                            <label class="fw-600">Selectează fișierul CSV</label>
+                            <input type="file" name="csv_file" class="form-control" accept=".csv, .txt" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ trans('messages.cancel') }}</button>
+                        <button type="submit" class="btn btn-primary fw-600">Importă</button>
+                    </div>
                 </form>
             </div>
         </div>
-
-        <table class="table table-box pml-table mt-2">
-            <thead>
-                <tr>
-                    <th>Produs</th>
-                    <th>SKU</th>
-                    <th>Preț Vânzare</th>
-                    <th>Cost Achiziție (RON)</th>
-                    <th>Marjă Profit (%)</th>
-                    <th>Stoc</th>
-                    <th class="text-end">Acțiune</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($products as $product)
-                    @php
-                        $margin = $product->profit_margin;
-                        $labelClass = $margin >= 35 ? 'bg-success' : ($margin >= 20 ? 'bg-warning text-dark' : 'bg-danger');
-                    @endphp
-                    <tr>
-                        <td>
-                            <span class="kq_search fw-600 d-block list-title">{{ $product->name }}</span>
-                        </td>
-                        <td><code class="text-muted">{{ $product->sku ?: 'N/A' }}</code></td>
-                        <td class="fw-bold text-dark">{{ number_format($product->price, 2) }} RON</td>
-                        <td>
-                            <input type="number" step="0.01" min="0" class="form-control form-control-sm cost-input" style="max-width: 120px;"
-                                   data-id="{{ $product->id }}" value="{{ $product->purchase_cost }}">
-                        </td>
-                        <td>
-                            <span class="label label-flat {{ $labelClass }} profit-margin-badge-{{ $product->id }}">
-                                {{ $margin }}%
-                            </span>
-                        </td>
-                        <td><span class="text-muted">{{ $product->stock_quantity }} buc</span></td>
-                        <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-outline-primary save-cost-btn m-icon" data-id="{{ $product->id }}">
-                                <span class="material-symbols-rounded">save</span> Salvează
-                            </button>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">Niciun produs găsit.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-
-        <div class="mt-3">
-            {{ $products->links() }}
-        </div>
     </div>
 
-    <!-- TAB 3: Recommendations -->
-    <div class="tab-pane fade" id="recommendations_pane" role="tabpanel" aria-labelledby="recommendations-tab">
-        <h4 class="mb-3 fw-bold">
-            <span class="material-symbols-rounded me-2 text-warning">star</span>
-            Top Produse Recomandate pentru Campanii MailClick
-        </h4>
+    <br>
+    <br>
 
-        <table class="table table-box pml-table mt-2">
-            <thead>
-                <tr>
-                    <th>Produs</th>
-                    <th>SKU</th>
-                    <th>Preț Vânzare</th>
-                    <th>Scor Recomandare ($P_{score}$)</th>
-                    <th class="text-end">Acțiune</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($topProducts as $prod)
-                    <tr>
-                        <td><span class="fw-600 list-title">{{ $prod->name }}</span></td>
-                        <td><code class="text-muted">{{ $prod->sku }}</code></td>
-                        <td class="fw-bold">{{ number_format($prod->price, 2) }} RON</td>
-                        <td>
-                            <span class="label label-flat bg-primary">
-                                ⭐ {{ number_format($prod->rfm_score, 2) }} pts
-                            </span>
-                        </td>
-                        <td class="text-end">
-                            <a href="{{ action('CampaignController@create') }}" class="btn btn-sm btn-outline-primary m-icon">
-                                <span class="material-symbols-rounded">campaign</span> Promovează în MailClick
-                            </a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">Rulați prima sincronizare.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+    <script>
+        $(document).ready(function() {
+            // Sync button loading mask
+            $('.sync-button').on('click', function() {
+                addMaskLoading('{{ trans('messages.source.importing_product') }}');
+            });
 
-    <!-- TAB 4: Recent Orders -->
-    <div class="tab-pane fade" id="orders_pane" role="tabpanel" aria-labelledby="orders-tab">
-        <h4 class="mb-3 fw-bold">
-            <span class="material-symbols-rounded me-2 text-primary">history</span>
-            Istoric Comenzi Recente
-        </h4>
+            // Save purchase cost inline
+            $('.save-cost-btn').on('click', function(e) {
+                e.preventDefault();
+                var btn = $(this);
+                var id = btn.data('id');
+                var input = $('.cost-input[data-id="' + id + '"]');
+                var cost = input.val();
 
-        <table class="table table-box pml-table mt-2">
-            <thead>
-                <tr>
-                    <th>Număr Comandă</th>
-                    <th>Client</th>
-                    <th>Valoare Totală</th>
-                    <th>Status</th>
-                    <th>Dată Comandă</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($recentOrders as $ord)
-                    <tr>
-                        <td><span class="fw-bold text-primary">{{ $ord->order_number }}</span></td>
-                        <td>
-                            <span class="fw-600 d-block">{{ $ord->billing_first_name }} {{ $ord->billing_last_name }}</span>
-                            <small class="text-muted">{{ $ord->customer_email }}</small>
-                        </td>
-                        <td class="fw-bold text-dark">{{ number_format($ord->total, 2) }} {{ $ord->currency }}</td>
-                        <td><span class="label label-flat bg-success">Finalizată</span></td>
-                        <td class="text-muted">{{ $ord->created_at ? $ord->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">Nu există comenzi recente.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-</div>
+                btn.prop('disabled', true).html('<span class="material-symbols-rounded">sync</span>');
 
-<!-- Modal Import CSV -->
-<div class="modal fade" id="importCsvModal" tabindex="-1" aria-labelledby="importCsvModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form action="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@importPurchaseCosts') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" name="store_id" value="{{ $selectedStore->id }}">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="importCsvModalLabel">
-                        <span class="material-symbols-rounded text-primary me-2">upload_file</span>
-                        Importă Costuri de Achiziție (CSV)
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body py-3">
-                    <p class="text-muted small">Încarcă un fișier CSV cu coloana <code>purchase_cost</code> și <code>sku</code> (sau <code>woo_product_id</code>).</p>
-                    <div class="mb-3">
-                        <label class="form-label font-semibold">Selectează fișierul CSV</label>
-                        <input type="file" name="csv_file" class="form-control" accept=".csv, .txt" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Renunță</button>
-                    <button type="submit" class="btn btn-primary fw-bold">Importă</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+                $.ajax({
+                    url: '/woo/products/' + id + '/purchase-cost',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        purchase_cost: cost
+                    },
+                    success: function(res) {
+                        btn.prop('disabled', false).html('<span class="material-symbols-rounded me-1">check</span> Salvat');
+                        $('.profit-margin-badge-' + id).html('<span class="text-success">' + res.profit_margin + '</span>');
+                        setTimeout(function() {
+                            btn.html('<span class="material-symbols-rounded me-1">save</span> Salvează');
+                        }, 2000);
+                    },
+                    error: function(err) {
+                        btn.prop('disabled', false).html('<span class="material-symbols-rounded me-1">save</span> Salvează');
+                        notify({
+                            type: 'danger',
+                            message: 'Eroare la salvarea costului.'
+                        });
+                    }
+                });
+            });
 
-<script>
-$(document).ready(function() {
-    $('.save-cost-btn').on('click', function(e) {
-        e.preventDefault();
-        var btn = $(this);
-        var id = btn.data('id');
-        var input = $('.cost-input[data-id="' + id + '"]');
-        var cost = input.val();
-
-        btn.prop('disabled', true).html('<span class="material-symbols-rounded fs-6 align-middle">sync</span>');
-
-        $.ajax({
-            url: '/woo/products/' + id + '/purchase-cost',
-            type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}',
-                purchase_cost: cost
-            },
-            success: function(res) {
-                btn.prop('disabled', false).html('<span class="material-symbols-rounded fs-6 align-middle text-success">check</span> Salvat');
-                $('.profit-margin-badge-' + id).text(res.profit_margin + '%');
-                setTimeout(function() {
-                    btn.html('<span class="material-symbols-rounded me-1">save</span> Salvează');
-                }, 2000);
-            },
-            error: function(err) {
-                btn.prop('disabled', false).html('<span class="material-symbols-rounded me-1">save</span> Salvează');
-                alert('Eroare la salvarea costului.');
-            }
+            // RFM Donut Chart (ECharts — same setup as dashboard)
+            @if(isset($rfmSegments))
+                var rfmChart = echarts.init(document.getElementById('rfmChart'), ECHARTS_THEME);
+                rfmChart.setOption({
+                    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+                    legend: { bottom: '0%', left: 'center' },
+                    series: [{
+                        name: 'Segmentare RFM',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+                        label: { show: false },
+                        emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+                        labelLine: { show: false },
+                        data: [
+                            { value: {{ $rfmSegments['champions'] }}, name: 'Champions', itemStyle: { color: '#28a745' } },
+                            { value: {{ $rfmSegments['loyal'] }}, name: 'Loiali', itemStyle: { color: '#007bff' } },
+                            { value: {{ $rfmSegments['at_risk'] }}, name: 'La Risc', itemStyle: { color: '#ffc107' } },
+                            { value: {{ $rfmSegments['lost'] }}, name: 'Pierduți', itemStyle: { color: '#dc3545' } }
+                        ]
+                    }]
+                });
+                $(window).on('resize', function() { rfmChart.resize(); });
+            @endif
         });
-    });
-});
-</script>
+    </script>
 @endsection
