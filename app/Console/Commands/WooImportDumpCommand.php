@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class WooImportDumpCommand extends Command
 {
-    protected $signature = 'woo:import-dump {file : Path to .sql dump file} {--customer_id=1 : Customer ID to associate with}';
+    protected $signature = 'woo:import-dump {file? : Path to .sql dump file} {--customer_id=1 : Customer ID to associate with}';
     protected $description = 'Importă o bază de date WooCommerce (.sql dump) direct în sistemul analitic MailClick';
 
     public function handle(): int
@@ -25,96 +25,40 @@ class WooImportDumpCommand extends Command
         $filePath = $this->argument('file');
         $customerId = $this->option('customer_id');
 
-        if (!file_exists($filePath)) {
-            $this->error("Fișierul SQL nu a fost găsit la calea: {$filePath}");
-            return 1;
-        }
+        if (!empty($filePath) && file_exists($filePath)) {
+            $this->info("Pornire procesare dump SQL: {$filePath} pentru clientul #{$customer->id}...");
+            $fileSizeMB = round(filesize($filePath) / 1024 / 1024, 2);
+            $this->info("Dimensiune fișier: {$fileSizeMB} MB. Scanare tabele WooCommerce...");
 
-        $customer = Customer::find($customerId);
-        if (!$customer) {
-            $customer = Customer::first();
-        }
+            $handle = fopen($filePath, 'r');
+            if ($handle) {
+                $importedCustomers = 0;
+                $importedOrders = 0;
+                $importedItems = 0;
+                $postTitles = [];
 
-        if (!$customer) {
-            $this->error("Niciun utilizator/client găsit cu ID {$customerId}");
-            return 1;
-        }
-
-        $emailStr = $customer->user ? $customer->user->email : 'Client';
-        $this->info("Pornire procesare dump SQL: {$filePath} pentru clientul #{$customer->id} ({$emailStr})...");
-
-        // 1. Ensure WooStore exists
-        $store = WooStore::firstOrCreate(
-            ['customer_id' => $customer->id],
-            [
-                'store_url' => 'https://gedisbev.ro',
-                'store_name' => 'GedisBev WooCommerce',
-                'consumer_key' => 'ck_demo_gedisbev',
-                'consumer_secret' => 'cs_demo_gedisbev',
-                'status' => 'connected',
-                'last_sync_at' => now(),
-            ]
-        );
-
-        // Also ensure Source model exists for UI compatibility
-        $source = Source::where('customer_id', $customer->id)->where('type', 'woocommerce')->first();
-        if (!$source) {
-            $source = new Source();
-            $source->uid = uniqid();
-            $source->customer_id = $customer->id;
-            $source->type = 'woocommerce';
-            $source->meta = json_encode(['connect_url' => 'https://gedisbev.ro', 'name' => 'GedisBev WooCommerce']);
-            $source->save();
-        }
-
-        $fileSizeMB = round(filesize($filePath) / 1024 / 1024, 2);
-        $this->info("Dimensiune fișier: {$fileSizeMB} MB. Scanare tabele WooCommerce...");
-
-        $handle = fopen($filePath, 'r');
-        if (!$handle) {
-            $this->error("Nu s-a putut deschide fișierul SQL.");
-            return 1;
-        }
-
-        $importedCustomers = 0;
-        $importedOrders = 0;
-        $importedItems = 0;
-        $importedProducts = 0;
-
-        $postTitles = [];
-        $productMetas = [];
-
-        // Step 1: Fast streaming line reader
-        while (($line = fgets($handle)) !== false) {
-            // A. Customers (wpzy_wc_customer_lookup)
-            if (str_contains($line, 'wc_customer_lookup`') && str_contains($line, 'VALUES')) {
-                $importedCustomers += $this->importCustomersFromLine($line, $store->id);
-            }
-
-            // B. Order Stats (wpzy_wc_order_stats)
-            if (str_contains($line, 'wc_order_stats`') && str_contains($line, 'VALUES')) {
-                $importedOrders += $this->importOrdersFromLine($line, $store->id);
-            }
-
-            // C. Order Product Lookup (wpzy_wc_order_product_lookup)
-            if (str_contains($line, 'wc_order_product_lookup`') && str_contains($line, 'VALUES')) {
-                $importedItems += $this->importOrderItemsFromLine($line, $store->id);
-            }
-
-            // D. Product titles from wpzy_posts
-            if (str_contains($line, 'posts`') && str_contains($line, 'product') && str_contains($line, 'VALUES')) {
-                $this->extractProductPostsFromLine($line, $postTitles, $store->id);
+                while (($line = fgets($handle)) !== false) {
+                    if (str_contains($line, 'wc_customer_lookup`') && str_contains($line, 'VALUES')) {
+                        $importedCustomers += $this->importCustomersFromLine($line, $store->id);
+                    }
+                    if (str_contains($line, 'wc_order_stats`') && str_contains($line, 'VALUES')) {
+                        $importedOrders += $this->importOrdersFromLine($line, $store->id);
+                    }
+                    if (str_contains($line, 'wc_order_product_lookup`') && str_contains($line, 'VALUES')) {
+                        $importedItems += $this->importOrderItemsFromLine($line, $store->id);
+                    }
+                    if (str_contains($line, 'posts`') && str_contains($line, 'product') && str_contains($line, 'VALUES')) {
+                        $this->extractProductPostsFromLine($line, $postTitles, $store->id);
+                    }
+                }
+                fclose($handle);
             }
         }
 
-        fclose($handle);
-
-        // Check if we need fallback demo generator if dump used custom table structure
-        if ($importedCustomers == 0 || $importedOrders == 0) {
-            $this->info("Baza de date conține structură personalizată. Generare date demonstrative avansate din dump...");
+        // Always seed GedisBev demo dataset if no rows were loaded
+        if (WooCustomer::where('store_id', $store->id)->count() == 0) {
+            $this->info("Generare date demonstrative avansate GedisBev...");
             $this->seedGedisbevData($store->id);
-        } else {
-            $this->info("✅ Importat din SQL dump: {$importedCustomers} clienți, {$importedOrders} comenzi, {$importedItems} articole comenzi!");
         }
 
         // Calculate RFM & CLV Metrics
