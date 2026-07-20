@@ -68,13 +68,15 @@ class Automation2Controller extends Controller
                 'automation' => $automation,
                 'trigger' => $automation->getTrigger(),
                 'trigger_type' => $request->trigger_type,
-                'rules' => $this->triggerRules()[$request->trigger_type],
+                'rules' => $this->triggerRules()[$request->trigger_type] ?? [],
+                'errors' => session()->get('errors', new \Illuminate\Support\ViewErrorBag),
             ]);
         }
 
         return view('automation2.wizardTrigger', [
             'types' => $types,
             'templates' => Automation2::getFlowTemplates(),
+            'errors' => session()->get('errors', new \Illuminate\Support\ViewErrorBag),
         ]);
     }
 
@@ -109,6 +111,7 @@ class Automation2Controller extends Controller
 
         return view('automation2.wizardTriggerOption', [
             'trigger_type' => $request->trigger_type,
+            'errors' => session()->get('errors', new \Illuminate\Support\ViewErrorBag),
         ]);
     }
 
@@ -207,12 +210,14 @@ class Automation2Controller extends Controller
                 'automation' => $automation,
                 'template_key' => $request->template_key,
                 'templates' => Automation2::getFlowTemplates(),
+                'errors' => session()->get('errors', new \Illuminate\Support\ViewErrorBag),
             ]);
         }
 
         // GET: show templates list
         return view('automation2.wizardTemplates', [
             'templates' => Automation2::getFlowTemplates(),
+            'errors' => session()->get('errors', new \Illuminate\Support\ViewErrorBag),
         ]);
     }
 

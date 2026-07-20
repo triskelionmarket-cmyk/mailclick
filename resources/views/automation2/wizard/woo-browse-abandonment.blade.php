@@ -2,7 +2,9 @@
     <input type="hidden" name="options[type]" value="woo-browse-abandonment" />
     
     @php
-        $sourceOptions = request()->user()->customer->local()->getSelectOptions('woocommerce');
+        $user = Auth::user() ?: request()->user();
+        $customer = $user ? $user->customer->local() : null;
+        $sourceOptions = $customer ? $customer->getSelectOptions('woocommerce') : [];
         $defaultSourceUid = count($sourceOptions) > 0 ? $sourceOptions[0]['value'] : '';
     @endphp
 
@@ -25,7 +27,7 @@
         'type' => 'select',
         'label' => trans('messages.list'),
         'value' => '',
-        'options' => Auth::user()->customer->local()->readCache('MailListSelectOptions', []),
+        'options' => $customer ? $customer->readCache('MailListSelectOptions', []) : [],
     ])
 
     <div class="automation-segment">
