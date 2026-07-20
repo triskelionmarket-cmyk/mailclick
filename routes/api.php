@@ -147,6 +147,8 @@ Route::group(['namespace' => '\Acelle\Http\Controllers\Api', 'prefix' => 'v1', '
 Route::group(['namespace' => '\Acelle\Http\Controllers\Api', 'prefix' => 'v1', 'middleware' => []], function () {
     // User
     Route::post('user/login', 'UserController@login');
+    // WooCommerce Real-time Webhook (Abandoned Cart & Ingestion)
+    Route::post('woo/webhook', 'WooWebhookController@handle');
 });
 
 Route::group(['namespace' => '\Acelle\Http\Controllers\Api\Public', 'prefix' => 'v1'], function () {
