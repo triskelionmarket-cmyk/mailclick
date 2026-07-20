@@ -61,6 +61,9 @@ if (isInitiated()) {
     // GeoIp database check
     Schedule::command('geoip:check')->everyMinute()->withoutOverlapping(60);
 
+    // WooCommerce Store Data Sync (every 4 hours)
+    Schedule::command('woo:sync')->everyFourHours();
+
     // Subscription: check expiration
     Schedule::call(function () {
         Notification::recordIfFails(function () {
