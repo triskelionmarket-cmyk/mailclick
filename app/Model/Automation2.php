@@ -2714,8 +2714,33 @@ class Automation2 extends Model
                 'options' => [
                     'key' => 'woo-abandoned-cart',
                     'type' => 'woo-abandoned-cart',
-                    'source_uid' => $params['options']['source_uid'],
-                    'wait' => $params['options']['wait'],
+                    'source_uid' => $params['options']['source_uid'] ?? '',
+                    'wait' => $params['options']['wait'] ?? '24_hour',
+                    'init' => 'true',
+                ],
+                'last_executed' => null,
+                'evaluationResult' => null,
+            ];
+        }
+        elseif (in_array($type, [
+            self::TRIGGER_WOO_PRICE_DROP,
+            self::TRIGGER_WOO_BROWSE_ABANDONMENT,
+            self::TRIGGER_WOO_REPLENISHMENT,
+            self::TRIGGER_WOO_ORDER_COMPLETED,
+            'woo-price-drop',
+            'woo-browse-abandonment',
+            'woo-replenishment',
+            'woo-order-completed',
+        ])) {
+            return [
+                'id' => 'trigger',
+                'title' => trans('messages.automation.trigger.' . $type),
+                'type' => 'ElementTrigger',
+                'child' => null,
+                'options' => [
+                    'key' => $type,
+                    'type' => $type,
+                    'source_uid' => $params['options']['source_uid'] ?? '',
                     'init' => 'true',
                 ],
                 'last_executed' => null,
