@@ -64,16 +64,28 @@ class WooAnalyticsController extends Controller
         }
         $products = $productsQuery->orderBy('id', 'desc')->paginate(15);
 
+        // Winback Candidates
+        $analyticsService = new \Acelle\Services\WooAnalyticsService();
+        $winbackCustomers = $analyticsService->getWinbackCandidates($selectedStore->id, 10);
+
+        // Recent Orders
+        $recentOrders = WooOrder::where('store_id', $selectedStore->id)
+            ->orderBy('id', 'desc')
+            ->take(15)
+            ->get();
+
         return view('woo.analytics', [
-            'stores'          => $stores,
-            'selectedStore'   => $selectedStore,
-            'totalRevenue'    => $totalRevenue,
-            'totalOrders'     => $totalOrders,
-            'totalCustomers'  => $totalCustomers,
-            'avgClv'          => round($avgClv, 2),
-            'topProducts'     => $topProducts,
-            'rfmSegments'     => $rfmSegments,
-            'products'        => $products,
+            'stores'            => $stores,
+            'selectedStore'     => $selectedStore,
+            'totalRevenue'      => $totalRevenue,
+            'totalOrders'       => $totalOrders,
+            'totalCustomers'    => $totalCustomers,
+            'avgClv'            => round($avgClv, 2),
+            'topProducts'       => $topProducts,
+            'rfmSegments'       => $rfmSegments,
+            'products'          => $products,
+            'recentOrders'      => $recentOrders,
+            'winbackCustomers'  => $winbackCustomers,
         ]);
     }
 
