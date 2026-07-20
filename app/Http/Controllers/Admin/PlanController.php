@@ -45,7 +45,7 @@ class PlanController extends Controller
     {
         $plans = \Acelle\Model\PlanGeneral::search($request->keyword)
             ->filter($request)
-            ->orderBy($request->sort_order, $request->sort_direction ? $request->sort_direction : 'asc')
+            ->orderBy($request->sort_order ?? 'created_at', $request->sort_direction ? $request->sort_direction : 'desc')
             ->paginate($request->per_page);
 
         return view('admin.plans._list', [
