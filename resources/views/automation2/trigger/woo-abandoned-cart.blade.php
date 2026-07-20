@@ -2,9 +2,9 @@
     <input type="hidden" name="options[type]" value="woo-abandoned-cart" />
     
     @php
-        $trigger = $automation->getTrigger();
-        $data = $trigger->getOption('source_uid') ? Acelle\Model\Source::findByUid($trigger->getOption('source_uid'))->getData() : null;
-        $shopinfo = !$data ? [] : Acelle\Model\Source::findByUid($trigger->getOption('source_uid'))->getData()['data'];
+        $source = $trigger->getOption('source_uid') ? Acelle\Model\Source::findByUid($trigger->getOption('source_uid')) : null;
+        $data = $source ? $source->getData() : [];
+        $shopinfo = $data['data'] ?? $data ?? [];
     @endphp
     @if (isset($shopinfo['name']) && !request()->options)
         <div class="cart-settings mb-4">

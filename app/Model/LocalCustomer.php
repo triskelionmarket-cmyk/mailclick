@@ -339,7 +339,9 @@ class LocalCustomer extends Customer
         }
 
         return $query->get()->map(function ($source) {
-            return ['text' => $source->getData()['data']['name'], 'value' => $source->uid];
+            $data = $source->getData();
+            $name = $data['data']['name'] ?? $data['name'] ?? $data['title'] ?? $source->name ?? 'WooCommerce Store';
+            return ['text' => $name, 'value' => $source->uid];
         });
     }
 
