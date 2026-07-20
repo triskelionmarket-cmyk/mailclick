@@ -54,12 +54,23 @@ class WooStore extends Model
 
     public function sync()
     {
-        \Artisan::call('woo:import-dump', [
-            '--customer_id' => $this->customer_id ?? 1,
-            '--seed' => true,
-        ]);
-        $this->last_synced_at = now();
-        $this->sync_status = 'idle';
-        $this->save();
+        try {
+            $this->sync_status = 'syncing';
+            $this->save();
+
+            \Artisan::call('woo:import-dump', [
+                '--customer_id' => $this->customer_id ?? 1,
+                '--seed' => true,
+            ]);
+
+            $this->last_synced_at = now();
+            $this->sync_status = 'completed';
+            $this->save();
+        } catch (\Exception $e) {
+            $this->sync_status = 'failed';
+            $this->save();
+            \Log::error('WooStore sync failed: ' . $e->getMessage());
+            throw $e;
+        }
     }
 }

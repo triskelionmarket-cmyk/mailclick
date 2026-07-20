@@ -27,7 +27,11 @@ class Product extends Model
      *
      * @var array
      */
-    protected $fillable = ['category_id', 'title', 'content'];
+    protected $fillable = [
+        'category_id', 'title', 'content', 'customer_id', 'source_id', 
+        'source_item_id', 'name', 'price', 'description', 'status', 
+        'stock', 'curency', 'sku', 'unit', 'file', 'pack'
+    ];
 
     // belongs to customer
     public function customer()

@@ -149,15 +149,22 @@ class SourceController extends Controller
     {
         $source = Source::findByUid($uid);
         if ($source) {
-            $mapped = $source->classMapping();
-            if ($mapped && method_exists($mapped, 'sync')) {
-                $mapped->sync();
-            } elseif (method_exists($source, 'sync')) {
-                $source->sync();
+            try {
+                $mapped = $source->classMapping();
+                if ($mapped && method_exists($mapped, 'sync')) {
+                    $mapped->sync();
+                } elseif (method_exists($source, 'sync')) {
+                    $source->sync();
+                }
+                $request->session()->flash('alert-success', 'Datele magazinului au fost sincronizate cu succes!');
+            } catch (\Exception $e) {
+                \Log::error('Source sync failed: ' . $e->getMessage());
+                $request->session()->flash('alert-danger', 'Eroare la sincronizare: ' . $e->getMessage());
             }
+        } else {
+            $request->session()->flash('alert-warning', 'Sursa nu a fost găsită.');
         }
 
-        $request->session()->flash('alert-success', 'Datele magazinului au fost sincronizate cu succes!');
         return redirect()->action('SourceController@index');
     }
 

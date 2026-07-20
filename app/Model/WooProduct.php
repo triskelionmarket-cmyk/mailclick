@@ -17,6 +17,7 @@ class WooProduct extends Model
         'regular_price',
         'sale_price',
         'purchase_cost',
+        'stock_status',
         'stock_quantity',
         'categories_json',
         'images_json',

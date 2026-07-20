@@ -29,17 +29,24 @@ class WooAnalyticsService
         $inactiveCustomers = WooCustomer::where('store_id', $storeId)->where('rfm_recency', '>', 90)->count();
         $churnRate = $totalCustomers > 0 ? round(($inactiveCustomers / $totalCustomers) * 100, 2) : 0.0;
 
-        $recoveredCarts = DB::table('ecommerce_events')
-            ->where('source_id', $storeId)
-            ->where('event_type', 'cart_recovered')
-            ->count();
+        $cartRecoveryRate = 0.0;
+        try {
+            if (\Schema::hasTable('ecommerce_events')) {
+                $recoveredCarts = DB::table('ecommerce_events')
+                    ->where('source_id', $storeId)
+                    ->where('event_type', 'cart_recovered')
+                    ->count();
 
-        $abandonedCarts = DB::table('ecommerce_events')
-            ->where('source_id', $storeId)
-            ->where('event_type', 'cart_abandoned')
-            ->count();
+                $abandonedCarts = DB::table('ecommerce_events')
+                    ->where('source_id', $storeId)
+                    ->where('event_type', 'cart_abandoned')
+                    ->count();
 
-        $cartRecoveryRate = $abandonedCarts > 0 ? round(($recoveredCarts / $abandonedCarts) * 100, 2) : 0.0;
+                $cartRecoveryRate = $abandonedCarts > 0 ? round(($recoveredCarts / $abandonedCarts) * 100, 2) : 0.0;
+            }
+        } catch (\Exception $e) {
+            // Table may not exist yet
+        }
 
         return [
             'total_revenue' => $totalRevenue,

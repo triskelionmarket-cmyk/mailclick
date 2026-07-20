@@ -44,8 +44,8 @@ class WooImportDumpCommand extends Command
                 'store_name' => 'GedisBev WooCommerce',
                 'consumer_key' => 'ck_demo_gedisbev',
                 'consumer_secret' => 'cs_demo_gedisbev',
-                'status' => 'connected',
-                'last_sync_at' => now(),
+                'sync_status' => 'completed',
+                'last_synced_at' => now(),
             ]
         );
 
