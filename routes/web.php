@@ -237,6 +237,7 @@ Route::group(['namespace' => '\Acelle\Http\Controllers', 'middleware' => ['not_i
     Route::post('woo/connect/approve', 'WooConnectController@approveStore');
     Route::get('woo/analytics', 'WooAnalyticsController@index');
     Route::post('woo/products/{id}/purchase-cost', 'WooAnalyticsController@updatePurchaseCost');
+    Route::post('woo/products/import-cost-prices', 'WooAnalyticsController@importPurchaseCosts');
 });
 
 Route::group(['namespace' => '\Acelle\Http\Controllers', 'middleware' => ['not_installed', 'auth', 'frontend', '2fa']], function () {

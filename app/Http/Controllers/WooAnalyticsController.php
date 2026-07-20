@@ -97,4 +97,62 @@ class WooAnalyticsController extends Controller
             'profit_margin' => $product->profit_margin . '%',
         ]);
     }
+
+    /**
+     * Import Purchase Costs via CSV file (columns: sku, purchase_cost or woo_product_id, purchase_cost).
+     */
+    public function importPurchaseCosts(Request $request)
+    {
+        $request->validate([
+            'store_id' => 'required|exists:mlck_woo_stores,id',
+            'csv_file' => 'required|file|mimes:csv,txt|max:5120',
+        ]);
+
+        $customer = Auth::user()->customer;
+        $store = WooStore::where('customer_id', $customer->id)->findOrFail($request->input('store_id'));
+
+        $file = $request->file('csv_file');
+        $handle = fopen($file->getRealPath(), 'r');
+        $header = fgetcsv($handle);
+
+        if (!$header) {
+            return back()->with('error', 'Fișierul CSV este gol sau nevalid.');
+        }
+
+        $header = array_map('strtolower', array_map('trim', $header));
+        $skuIdx = array_search('sku', $header);
+        $idIdx = array_search('woo_product_id', $header);
+        $costIdx = array_search('purchase_cost', $header);
+
+        if ($costIdx === false || ($skuIdx === false && $idIdx === false)) {
+            return back()->with('error', 'Fișierul CSV trebuie să conțină coloanele "purchase_cost" și "sku" sau "woo_product_id".');
+        }
+
+        $updatedCount = 0;
+        while (($row = fgetcsv($handle)) !== false) {
+            $cost = isset($row[$costIdx]) ? (float) trim($row[$costIdx]) : null;
+            if ($cost === null || $cost < 0) {
+                continue;
+            }
+
+            $query = WooProduct::where('store_id', $store->id);
+            if ($skuIdx !== false && !empty($row[$skuIdx])) {
+                $query->where('sku', trim($row[$skuIdx]));
+            } elseif ($idIdx !== false && !empty($row[$idIdx])) {
+                $query->where('woo_product_id', trim($row[$idIdx]));
+            } else {
+                continue;
+            }
+
+            $product = $query->first();
+            if ($product) {
+                $product->purchase_cost = $cost;
+                $product->save();
+                $updatedCount++;
+            }
+        }
+        fclose($handle);
+
+        return back()->with('success', "Au fost actualizate costurile de achiziție pentru {$updatedCount} produse.");
+    }
 }

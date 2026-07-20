@@ -54,6 +54,26 @@ class MailClick_OAuth {
                     'connected_at'   => current_time('mysql'),
                 );
 
+                // Auto-generate WooCommerce REST API Keys if WooCommerce is active
+                $ck_cs = self::create_wc_api_keys();
+                if ($ck_cs) {
+                    $options['consumer_key'] = $ck_cs['consumer_key'];
+                    $options['consumer_secret'] = $ck_cs['consumer_secret'];
+
+                    // Post keys back to MailClick API
+                    wp_remote_post(rtrim($options['mailclick_url'], '/') . '/api/v1/woo/keys', array(
+                        'headers' => array(
+                            'Authorization' => 'Bearer ' . $options['passport_token'],
+                            'Accept'        => 'application/json',
+                        ),
+                        'body' => array(
+                            'store_uid'       => $options['store_uid'],
+                            'consumer_key'    => $ck_cs['consumer_key'],
+                            'consumer_secret' => $ck_cs['consumer_secret'],
+                        ),
+                    ));
+                }
+
                 update_option('mailclick_connect_options', $options);
                 update_option('mailclick_app_url', $options['mailclick_url']);
 
@@ -61,6 +81,38 @@ class MailClick_OAuth {
                 exit;
             }
         }
+    }
+
+    /**
+     * Helper to programmatically create WooCommerce REST API Consumer Key & Secret.
+     */
+    public static function create_wc_api_keys() {
+        if (!class_exists('WooCommerce')) {
+            return false;
+        }
+
+        global $wpdb;
+        $user_id = get_current_user_id();
+        $description = 'MailClick Connect API Key (' . current_time('Y-m-d H:i') . ')';
+
+        $consumer_key    = 'ck_' . wc_rand_hash();
+        $consumer_secret = 'cs_' . wc_rand_hash();
+
+        $data = array(
+            'user_id'         => $user_id,
+            'description'     => $description,
+            'permissions'     => 'read_write',
+            'consumer_key'    => wc_api_hash($consumer_key),
+            'consumer_secret' => $consumer_secret,
+            'truncated_key'   => substr($consumer_key, -7),
+        );
+
+        $wpdb->insert($wpdb->prefix . 'woocommerce_api_keys', $data, array('%d', '%s', '%s', '%s', '%s', '%s'));
+
+        return array(
+            'consumer_key'    => $consumer_key,
+            'consumer_secret' => $consumer_secret,
+        );
     }
 
     /**

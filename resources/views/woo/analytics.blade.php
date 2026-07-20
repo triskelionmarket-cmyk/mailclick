@@ -148,11 +148,45 @@
     </div>
 </div>
 
-<!-- Products Table with Purchase Cost Inline Editor -->
+<!-- Products Table with Purchase Cost Inline Editor & CSV Import -->
 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold mb-0"><i class="bi bi-tags me-2 text-primary"></i> Catalog Produse & Cost de Achiziție</h5>
-        <span class="text-muted small">Adaugă/Editează costul de achiziție pentru calculul automat de marjă de profit.</span>
+        <div>
+            <h5 class="fw-bold mb-0"><i class="bi bi-tags me-2 text-primary"></i> Catalog Produse & Cost de Achiziție</h5>
+            <span class="text-muted small">Adaugă/Editează costul de achiziție pentru calculul automat de marjă de profit.</span>
+        </div>
+        <div>
+            <button type="button" class="btn btn-outline-secondary btn-sm rounded-3 fw-semibold me-2" data-bs-toggle="modal" data-bs-target="#importCsvModal">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Importă CSV Costuri
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Import CSV -->
+    <div class="modal fade" id="importCsvModal" tabindex="-1" aria-labelledby="importCsvModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <form action="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@importPurchaseCosts') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="store_id" value="{{ $selectedStore->id }}">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold" id="importCsvModalLabel"><i class="bi bi-upload text-primary me-2"></i> Importă Costuri de Achiziție (CSV)</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body py-3">
+                        <p class="text-muted small">Încarcă un fișier CSV care conține coloana <code>purchase_cost</code> și coloana <code>sku</code> (sau <code>woo_product_id</code>).</p>
+                        <div class="mb-3">
+                            <label class="form-label font-semibold">Selectează fișierul CSV</label>
+                            <input type="file" name="csv_file" class="form-control" accept=".csv, .txt" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Renunță</button>
+                        <button type="submit" class="btn btn-primary fw-bold px-4">Importă</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div class="table-responsive">
