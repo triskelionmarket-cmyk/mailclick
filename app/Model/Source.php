@@ -111,6 +111,10 @@ class Source extends Model
      */
     public function productsCount()
     {
+        $wooCount = \Acelle\Model\WooProduct::whereIn('store_id', \Acelle\Model\WooStore::where('customer_id', $this->customer_id)->pluck('id'))->count();
+        if ($wooCount > 0) {
+            return $wooCount;
+        }
         return $this->products()->count();
     }
 

@@ -285,8 +285,10 @@ class WooImportDumpCommand extends Command
             ['id' => 1035, 'name' => 'Davino Flamboyant Vin Roșu Sec 0.75L', 'price' => 280.00, 'regular_price' => 320.00, 'cost' => 180.00, 'sku' => 'DAVI-FLAM-75'],
         ];
 
+        $source = Source::where('customer_id', 2)->first() ?? Source::first();
+
         foreach ($sampleProducts as $p) {
-            WooProduct::updateOrCreate(
+            $wp = WooProduct::updateOrCreate(
                 ['store_id' => $storeId, 'woo_product_id' => $p['id']],
                 [
                     'name' => $p['name'],
@@ -299,6 +301,22 @@ class WooImportDumpCommand extends Command
                     'rfm_score' => rand(15, 49) / 10.0,
                 ]
             );
+
+            if ($source) {
+                Product::updateOrCreate(
+                    ['source_id' => $source->id, 'source_item_id' => (string)$p['id']],
+                    [
+                        'customer_id' => $source->customer_id,
+                        'title' => $p['name'],
+                        'name' => $p['name'],
+                        'price' => $p['price'],
+                        'description' => $p['name'],
+                        'status' => 'active',
+                        'stock' => 150,
+                        'curency' => 'RON',
+                    ]
+                );
+            }
         }
 
         // 25 Real Romanian B2B & Retail Customers
