@@ -46,6 +46,55 @@ class Product extends Model
         return $this->belongsTo('Acelle\Model\Source');
     }
 
+    /**
+     * Get linked WooProduct by source_item_id = woo_product_id.
+     */
+    public function wooProduct()
+    {
+        return $this->hasOne(\Acelle\Model\WooProduct::class, 'woo_product_id', 'source_item_id');
+    }
+
+    /**
+     * Get category label from linked WooProduct or own category.
+     */
+    public function getCategoryLabel()
+    {
+        // Try WooProduct categories_json first
+        $wp = $this->wooProduct;
+        if ($wp && $wp->categories_json) {
+            $cats = is_array($wp->categories_json) ? $wp->categories_json : json_decode($wp->categories_json, true);
+            if (is_array($cats) && !empty($cats)) {
+                return is_string($cats[0]) ? $cats[0] : ($cats[0]['name'] ?? trans('messages.woo.uncategorized'));
+            }
+        }
+
+        // Try own category
+        $cat = $this->smsCategory;
+        if ($cat) {
+            return $cat->name;
+        }
+
+        return trans('messages.woo.uncategorized');
+    }
+
+    /**
+     * Get promotability score (RFM from WooProduct).
+     */
+    public function getPromotabilityScore()
+    {
+        $wp = $this->wooProduct;
+        return $wp ? number_format($wp->rfm_score, 1) : '—';
+    }
+
+    /**
+     * Get profit margin from linked WooProduct.
+     */
+    public function getProfitMargin()
+    {
+        $wp = $this->wooProduct;
+        return $wp ? $wp->profit_margin . '%' : '—';
+    }
+
     public function productAttributes()
     {
         return $this->hasMany('Acelle\Model\ProductAttribute');
@@ -116,9 +165,24 @@ class Product extends Model
 
     public function getImageUrl()
     {
+        // First check if linked WooProduct has an external image URL
+        $wp = $this->wooProduct;
+        if ($wp && $wp->images_json) {
+            $images = is_array($wp->images_json) ? $wp->images_json : json_decode($wp->images_json, true);
+            if (is_array($images) && !empty($images)) {
+                $first = $images[0];
+                // Could be a plain URL string or an object with 'src' key
+                $url = is_string($first) ? $first : ($first['src'] ?? null);
+                if ($url) {
+                    return $url;
+                }
+            }
+        }
+
+        // Fallback to local uploaded images
         $urls = $this->getImageUrls();
 
-        return empty($urls) ? null : $urls[0];
+        return empty($urls) ? url('images/no-product-image.png') : $urls[0];
     }
 
     public static function generateWidgetProductListHtmlContent($params)

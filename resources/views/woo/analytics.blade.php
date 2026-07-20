@@ -28,7 +28,7 @@
                 <div class="filter-box">
                     @if(isset($stores) && $stores->count() > 1)
                         <span class="filter-group">
-                            <span class="title text-semibold text-muted">Magazin:</span>
+                            <span class="title text-semibold text-muted">{{ trans('messages.source.switch_store') }}:</span>
                             <select class="select" name="store_id" onchange="window.location.href='{{ url('ecommerce/analytics') }}?store_id=' + this.value">
                                 @foreach($stores as $st)
                                     <option value="{{ $st->id }}" {{ $st->id == $selectedStore->id ? 'selected' : '' }}>
@@ -51,25 +51,25 @@
                     <span class="material-symbols-rounded">sync</span> {{ trans('messages.source.sync') }}
                 </a>
                 <button type="button" class="btn btn-primary m-icon" data-bs-toggle="modal" data-bs-target="#importCsvModal">
-                    <span class="material-symbols-rounded">upload_file</span> Import Costuri CSV
+                    <span class="material-symbols-rounded">upload_file</span> {{ trans('messages.woo.btn_import_csv') }}
                 </button>
             </div>
         </div>
 
         {{-- KPI Summary --}}
         <h2 class="mt-4 pt-2">{!! trans('messages.frontend_dashboard_hello', ['name' => Auth::user()->displayName(get_localization_config('show_last_name_first', Auth::user()->customer->getLanguageCode()))]) !!}</h2>
-        <p>Mai jos găsești o privire de ansamblu asupra performanței magazinului tău conectat.</p>
+        <p>{{ trans('messages.woo.overview_intro') }}</p>
 
         <h3 class="mt-5 mb-3">
             <span class="material-symbols-rounded me-2">donut_large</span>
-            Indicatori Cheie de Performanță
+            {{ trans('messages.woo.kpi_title') }}
         </h3>
 
         <div class="row quota_box">
             <div class="col-12 col-md-6">
                 <div class="content-group-sm mb-3">
                     <div class="d-flex mb-2">
-                        <label class="fw-600 me-auto">Venit Total</label>
+                        <label class="fw-600 me-auto">{{ trans('messages.woo.kpi_revenue') }}</label>
                         <div class="pull-right text-semibold">
                             <span class="text-muted">{{ number_format($totalRevenue, 0) }} RON</span>
                         </div>
@@ -82,9 +82,9 @@
             <div class="col-12 col-md-6">
                 <div class="content-group-sm mb-3">
                     <div class="d-flex mb-2">
-                        <label class="fw-600 me-auto">Comenzi Finalizate</label>
+                        <label class="fw-600 me-auto">{{ trans('messages.woo.kpi_orders') }}</label>
                         <div class="pull-right text-semibold">
-                            <span class="text-muted">{{ number_format($totalOrders) }} comenzi</span>
+                            <span class="text-muted">{{ number_format($totalOrders) }} {{ trans('messages.woo.orders_label') }}</span>
                         </div>
                     </div>
                     <div class="progress progress-sm" style="height: 12px;">
@@ -95,9 +95,9 @@
             <div class="col-12 col-md-6">
                 <div class="content-group-sm">
                     <div class="d-flex mb-2">
-                        <label class="fw-600 me-auto">Clienți Activi</label>
+                        <label class="fw-600 me-auto">{{ trans('messages.woo.kpi_customers') }}</label>
                         <div class="pull-right text-semibold">
-                            <span class="text-muted">{{ number_format($totalCustomers) }} clienți</span>
+                            <span class="text-muted">{{ number_format($totalCustomers) }} {{ trans('messages.woo.customers_label') }}</span>
                         </div>
                     </div>
                     <div class="progress progress-sm" style="height: 12px;">
@@ -108,7 +108,7 @@
             <div class="col-12 col-md-6">
                 <div class="content-group-sm">
                     <div class="d-flex mb-2">
-                        <label class="fw-600 me-auto">CLV Mediu Estimat</label>
+                        <label class="fw-600 me-auto">{{ trans('messages.woo.kpi_clv') }}</label>
                         <div class="pull-right text-semibold">
                             <span class="text-muted">{{ number_format($avgClv, 2) }} RON</span>
                         </div>
@@ -123,50 +123,45 @@
         {{-- Tabs --}}
         <h3 class="mt-5 mb-3">
             <span class="material-symbols-rounded me-2">star_half</span>
-            Date Detaliate Magazin
+            {{ trans('messages.woo.detailed_data') }}
         </h3>
 
         <ul class="nav nav-tabs nav-underline" id="analyticsTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link active" id="rfm-tab" data-bs-toggle="tab" data-bs-target="#rfm_pane" role="tab" aria-controls="rfm_pane" aria-selected="true">
-                    Segmentare RFM
+                <a class="nav-link active" id="rfm-tab" data-bs-toggle="tab" data-bs-target="#rfm_pane" role="tab">
+                    {{ trans('messages.woo.tab_rfm') }}
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" id="catalog-tab" data-bs-toggle="tab" data-bs-target="#catalog_pane" role="tab" aria-controls="catalog_pane" aria-selected="false">
-                    Catalog Produse
+                <a class="nav-link" id="catalog-tab" data-bs-toggle="tab" data-bs-target="#catalog_pane" role="tab">
+                    {{ trans('messages.woo.tab_catalog') }}
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" id="recommendations-tab" data-bs-toggle="tab" data-bs-target="#recommendations_pane" role="tab" aria-controls="recommendations_pane" aria-selected="false">
-                    Recomandări
+                <a class="nav-link" id="recommendations-tab" data-bs-toggle="tab" data-bs-target="#recommendations_pane" role="tab">
+                    {{ trans('messages.woo.tab_recommendations') }}
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders_pane" role="tab" aria-controls="orders_pane" aria-selected="false">
-                    Comenzi Recente
+                <a class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders_pane" role="tab">
+                    {{ trans('messages.woo.tab_orders') }}
                 </a>
             </li>
         </ul>
 
         <div class="tab-content" id="analyticsTabsContent">
 
-            {{-- ═══════════════════════════════════════════════ --}}
-            {{-- TAB 1: RFM Customer Segments                   --}}
-            {{-- ═══════════════════════════════════════════════ --}}
-            <div class="tab-pane fade show active" id="rfm_pane" role="tabpanel" aria-labelledby="rfm-tab">
-
-                {{-- RFM Chart --}}
+            {{-- TAB 1: RFM --}}
+            <div class="tab-pane fade show active" id="rfm_pane" role="tabpanel">
                 <div id="rfmChart" style="width:100%;height:280px;margin:20px 0;"></div>
 
-                {{-- RFM Segment Summary Cards --}}
                 <div class="row mt-2 mb-4">
                     @php
                         $segments = [
-                            ['key' => 'champions', 'label' => 'Champions', 'desc' => 'Cumpărători recenți & fideli', 'icon' => 'emoji_events', 'color' => '#28a745'],
-                            ['key' => 'loyal',     'label' => 'Loiali',     'desc' => 'Clienți constanți',           'icon' => 'loyalty',      'color' => '#007bff'],
-                            ['key' => 'at_risk',   'label' => 'La Risc',    'desc' => 'Inactivi de >60 zile',        'icon' => 'warning',      'color' => '#ffc107'],
-                            ['key' => 'lost',      'label' => 'Pierduți',   'desc' => 'Risc mare de pierdere',       'icon' => 'person_off',   'color' => '#dc3545'],
+                            ['key' => 'champions', 'label' => trans('messages.woo.seg_champions'), 'desc' => trans('messages.woo.seg_champions_desc'), 'icon' => 'emoji_events', 'color' => '#28a745'],
+                            ['key' => 'loyal',     'label' => trans('messages.woo.seg_loyal'),     'desc' => trans('messages.woo.seg_loyal_desc'),     'icon' => 'loyalty',      'color' => '#007bff'],
+                            ['key' => 'at_risk',   'label' => trans('messages.woo.seg_at_risk'),   'desc' => trans('messages.woo.seg_at_risk_desc'),   'icon' => 'warning',      'color' => '#ffc107'],
+                            ['key' => 'lost',      'label' => trans('messages.woo.seg_lost'),      'desc' => trans('messages.woo.seg_lost_desc'),      'icon' => 'person_off',   'color' => '#dc3545'],
                         ];
                     @endphp
                     @foreach($segments as $seg)
@@ -185,16 +180,13 @@
                     @endforeach
                 </div>
 
-                {{-- Win-back Customer Table --}}
                 <h3 class="mt-4 mb-3">
                     <span class="material-symbols-rounded me-2">campaign</span>
-                    Clienți Țintă Win-Back
+                    {{ trans('messages.woo.winback_title') }}
                 </h3>
 
                 @if(count($winbackCustomers) > 0)
-                    <table class="table table-box pml-table mt-2"
-                        current-page="1"
-                    >
+                    <table class="table table-box pml-table mt-2" current-page="1">
                         @foreach($winbackCustomers as $key => $cust)
                             <tr>
                                 <td width="1%">
@@ -209,24 +201,24 @@
                                     <span class="text-muted d-block mt-1">{{ $cust['email'] }}</span>
                                 </td>
                                 <td>
-                                    <h5 class="no-margin stat-num">{{ $cust['city'] ?? 'România' }}</h5>
-                                    <span class="text-muted d-block mt-2">Oraș</span>
+                                    <h5 class="no-margin stat-num">{{ $cust['city'] ?? '—' }}</h5>
+                                    <span class="text-muted d-block mt-2">{{ trans('messages.woo.col_city') }}</span>
                                 </td>
                                 <td>
                                     <h5 class="no-margin stat-num">{{ $cust['orders_count'] }}</h5>
-                                    <span class="text-muted d-block mt-2">Comenzi</span>
+                                    <span class="text-muted d-block mt-2">{{ trans('messages.woo.col_orders') }}</span>
                                 </td>
                                 <td>
                                     <h5 class="no-margin stat-num">{{ number_format($cust['total_spent'], 0) }} RON</h5>
-                                    <span class="text-muted d-block mt-2">Total Cheltuit</span>
+                                    <span class="text-muted d-block mt-2">{{ trans('messages.woo.col_total_spent') }}</span>
                                 </td>
                                 <td>
-                                    <h5 class="no-margin stat-num">{{ $cust['rfm_recency'] }} zile</h5>
-                                    <span class="text-muted d-block mt-2">Recență</span>
+                                    <h5 class="no-margin stat-num">{{ $cust['rfm_recency'] }} {{ trans('messages.woo.days') }}</h5>
+                                    <span class="text-muted d-block mt-2">{{ trans('messages.woo.col_recency') }}</span>
                                 </td>
                                 <td class="text-end">
                                     <a href="{{ action('CampaignController@selectType') }}" role="button" class="btn btn-secondary m-icon">
-                                        <span class="material-symbols-rounded me-1">mark_email_unread</span> Trimite
+                                        <span class="material-symbols-rounded me-1">mark_email_unread</span> {{ trans('messages.woo.btn_send') }}
                                     </a>
                                 </td>
                             </tr>
@@ -235,25 +227,17 @@
                 @else
                     <div class="empty-list">
                         <span class="material-symbols-rounded">auto_awesome</span>
-                        <span class="line-1">
-                            Nu există clienți inactivi pentru campanie win-back.
-                        </span>
+                        <span class="line-1">{{ trans('messages.woo.winback_empty') }}</span>
                     </div>
                 @endif
             </div>
 
-            {{-- ═══════════════════════════════════════════════ --}}
-            {{-- TAB 2: Catalog Produse & Profit Margin         --}}
-            {{-- ═══════════════════════════════════════════════ --}}
-            <div class="tab-pane fade" id="catalog_pane" role="tabpanel" aria-labelledby="catalog-tab">
+            {{-- TAB 2: Catalog --}}
+            <div class="tab-pane fade" id="catalog_pane" role="tabpanel">
                 @if($products->count() > 0)
-                    <table class="table table-box pml-table mt-2"
-                        current-page="{{ empty(request()->page) ? 1 : request()->page }}"
-                    >
+                    <table class="table table-box pml-table mt-2" current-page="{{ empty(request()->page) ? 1 : request()->page }}">
                         @foreach($products as $key => $product)
-                            @php
-                                $margin = $product->profit_margin;
-                            @endphp
+                            @php $margin = $product->profit_margin; @endphp
                             <tr>
                                 <td width="1%">
                                     <div class="product-image-list mr-3">
@@ -261,22 +245,18 @@
                                     </div>
                                 </td>
                                 <td width="30%">
-                                    <h5 class="no-margin text-normal">
-                                        <span class="kq_search">{{ $product->name }}</span>
-                                    </h5>
-                                    <span class="text-muted d-block mt-2">
-                                        SKU: {{ $product->sku ?: 'N/A' }}
-                                    </span>
+                                    <h5 class="no-margin text-normal"><span class="kq_search">{{ $product->name }}</span></h5>
+                                    <span class="text-muted d-block mt-2">SKU: {{ $product->sku ?: 'N/A' }}</span>
                                 </td>
                                 <td>
                                     <h5 class="no-margin stat-num">{{ number_format($product->price, 2) }} RON</h5>
-                                    <span class="text-muted d-block mt-2">Preț Vânzare</span>
+                                    <span class="text-muted d-block mt-2">{{ trans('messages.woo.col_sale_price') }}</span>
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" min="0" class="form-control form-control-sm cost-input"
                                            style="max-width: 110px; height: 33px;"
                                            data-id="{{ $product->id }}" value="{{ $product->purchase_cost }}">
-                                    <span class="text-muted d-block mt-1" style="font-size:12px;">Cost Achiziție</span>
+                                    <span class="text-muted d-block mt-1" style="font-size:12px;">{{ trans('messages.woo.col_purchase_cost') }}</span>
                                 </td>
                                 <td>
                                     <h5 class="no-margin stat-num profit-margin-badge-{{ $product->id }}">
@@ -288,15 +268,15 @@
                                             <span class="text-danger">{{ $margin }}%</span>
                                         @endif
                                     </h5>
-                                    <span class="text-muted d-block mt-2">Marjă</span>
+                                    <span class="text-muted d-block mt-2">{{ trans('messages.woo.col_margin') }}</span>
                                 </td>
                                 <td>
                                     <h5 class="no-margin stat-num">{{ $product->stock_quantity }}</h5>
-                                    <span class="text-muted d-block mt-2">Stoc</span>
+                                    <span class="text-muted d-block mt-2">{{ trans('messages.woo.col_stock') }}</span>
                                 </td>
                                 <td class="text-end">
                                     <button type="button" class="btn btn-secondary m-icon save-cost-btn" data-id="{{ $product->id }}">
-                                        <span class="material-symbols-rounded me-1">save</span> Salvează
+                                        <span class="material-symbols-rounded me-1">save</span> {{ trans('messages.woo.btn_save') }}
                                     </button>
                                 </td>
                             </tr>
@@ -306,17 +286,13 @@
                 @else
                     <div class="empty-list">
                         <span class="material-symbols-rounded">category</span>
-                        <span class="line-1">
-                            Niciun produs găsit. Rulați prima sincronizare.
-                        </span>
+                        <span class="line-1">{{ trans('messages.woo.no_products') }}</span>
                     </div>
                 @endif
             </div>
 
-            {{-- ═══════════════════════════════════════════════ --}}
-            {{-- TAB 3: Recommendations                         --}}
-            {{-- ═══════════════════════════════════════════════ --}}
-            <div class="tab-pane fade" id="recommendations_pane" role="tabpanel" aria-labelledby="recommendations-tab">
+            {{-- TAB 3: Recommendations --}}
+            <div class="tab-pane fade" id="recommendations_pane" role="tabpanel">
                 @if($topProducts->count() > 0)
                     <ul class="modern-listing mt-0 top-border-none">
                         @foreach($topProducts as $num => $prod)
@@ -326,30 +302,22 @@
                                         <div class="d-flex align-items-center">
                                             <i class="number d-inline-block me-3">{{ $num + 1 }}</i>
                                             <div>
-                                                <h6 class="mt-0 mb-0 text-semibold">
-                                                    {{ $prod->name }}
-                                                </h6>
-                                                <p class="mb-0">
-                                                    SKU: {{ $prod->sku }}
-                                                </p>
+                                                <h6 class="mt-0 mb-0 text-semibold">{{ $prod->name }}</h6>
+                                                <p class="mb-0">SKU: {{ $prod->sku }}</p>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-sm-2 col-md-2 text-left">
-                                        <h5 class="m-0 text-bold">
-                                            {{ number_format($prod->price, 2) }} RON
-                                        </h5>
-                                        <span class="text-muted">Preț</span>
+                                        <h5 class="m-0 text-bold">{{ number_format($prod->price, 2) }} RON</h5>
+                                        <span class="text-muted">{{ trans('messages.woo.col_price') }}</span>
                                     </div>
                                     <div class="col-sm-2 col-md-2 text-left">
-                                        <h5 class="m-0 text-bold">
-                                            {{ number_format($prod->rfm_score, 2) }}
-                                        </h5>
-                                        <span class="text-muted">Scor RFM</span>
+                                        <h5 class="m-0 text-bold">{{ number_format($prod->rfm_score, 2) }}</h5>
+                                        <span class="text-muted">{{ trans('messages.woo.col_rfm_score') }}</span>
                                     </div>
                                     <div class="col-sm-3 col-md-3 text-end">
                                         <a href="{{ action('CampaignController@selectType') }}" class="btn btn-secondary m-icon">
-                                            <span class="material-symbols-rounded me-1">campaign</span> Promovează
+                                            <span class="material-symbols-rounded me-1">campaign</span> {{ trans('messages.woo.btn_promote') }}
                                         </a>
                                     </div>
                                 </div>
@@ -359,21 +327,15 @@
                 @else
                     <div class="empty-list">
                         <span class="material-symbols-rounded">auto_awesome</span>
-                        <span class="line-1">
-                            Rulați prima sincronizare pentru a genera recomandări.
-                        </span>
+                        <span class="line-1">{{ trans('messages.woo.no_recommendations') }}</span>
                     </div>
                 @endif
             </div>
 
-            {{-- ═══════════════════════════════════════════════ --}}
-            {{-- TAB 4: Recent Orders                           --}}
-            {{-- ═══════════════════════════════════════════════ --}}
-            <div class="tab-pane fade" id="orders_pane" role="tabpanel" aria-labelledby="orders-tab">
+            {{-- TAB 4: Recent Orders --}}
+            <div class="tab-pane fade" id="orders_pane" role="tabpanel">
                 @if($recentOrders->count() > 0)
-                    <table class="table table-box pml-table mt-2"
-                        current-page="1"
-                    >
+                    <table class="table table-box pml-table mt-2" current-page="1">
                         @foreach($recentOrders as $key => $ord)
                             <tr>
                                 <td width="1%">
@@ -392,21 +354,21 @@
                                 </td>
                                 <td>
                                     <h5 class="no-margin stat-num">{{ number_format($ord->total, 2) }} {{ $ord->currency ?: 'RON' }}</h5>
-                                    <span class="text-muted d-block mt-2">Valoare</span>
+                                    <span class="text-muted d-block mt-2">{{ trans('messages.woo.col_value') }}</span>
                                 </td>
                                 <td>
                                     <h5 class="no-margin stat-num">
                                         @if($ord->status == 'completed')
-                                            <span class="text-success">Finalizată</span>
+                                            <span class="text-success">{{ trans('messages.woo.status_completed') }}</span>
                                         @elseif($ord->status == 'processing')
-                                            <span style="color:#007bff;">În procesare</span>
+                                            <span style="color:#007bff;">{{ trans('messages.woo.status_processing') }}</span>
                                         @elseif($ord->status == 'cancelled')
-                                            <span class="text-danger">Anulată</span>
+                                            <span class="text-danger">{{ trans('messages.woo.status_cancelled') }}</span>
                                         @else
                                             {{ ucfirst($ord->status) }}
                                         @endif
                                     </h5>
-                                    <span class="text-muted d-block mt-2">Status</span>
+                                    <span class="text-muted d-block mt-2">{{ trans('messages.woo.col_status') }}</span>
                                 </td>
                                 <td>
                                     <h5 class="no-margin stat-num">
@@ -420,9 +382,7 @@
                 @else
                     <div class="empty-list">
                         <span class="material-symbols-rounded">auto_awesome</span>
-                        <span class="line-1">
-                            Nu există comenzi recente.
-                        </span>
+                        <span class="line-1">{{ trans('messages.woo.no_orders') }}</span>
                     </div>
                 @endif
             </div>
@@ -430,46 +390,43 @@
     </div>
 
     {{-- CSV Import Modal --}}
-    <div class="modal fade" id="importCsvModal" tabindex="-1" aria-labelledby="importCsvModalLabel" aria-hidden="true">
+    <div class="modal fade" id="importCsvModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@importPurchaseCosts') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="store_id" value="{{ $selectedStore->id }}">
                     <div class="modal-header">
-                        <h5 class="modal-title fw-600" id="importCsvModalLabel">
+                        <h5 class="modal-title fw-600">
                             <span class="material-symbols-rounded me-2">upload_file</span>
-                            Importă Costuri de Achiziție (CSV)
+                            {{ trans('messages.woo.csv_modal_title') }}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body py-3">
-                        <p class="text-muted">Încarcă un fișier CSV cu coloanele <code>purchase_cost</code> și <code>sku</code> (sau <code>woo_product_id</code>).</p>
+                        <p class="text-muted">{!! trans('messages.woo.csv_modal_desc') !!}</p>
                         <div class="form-group">
-                            <label class="fw-600">Selectează fișierul CSV</label>
+                            <label class="fw-600">{{ trans('messages.woo.csv_select_file') }}</label>
                             <input type="file" name="csv_file" class="form-control" accept=".csv, .txt" required>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ trans('messages.cancel') }}</button>
-                        <button type="submit" class="btn btn-primary fw-600">Importă</button>
+                        <button type="submit" class="btn btn-primary fw-600">{{ trans('messages.woo.btn_import') }}</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <br>
-    <br>
+    <br><br>
 
     <script>
         $(document).ready(function() {
-            // Sync button loading mask
             $('.sync-button').on('click', function() {
                 addMaskLoading('{{ trans('messages.source.importing_product') }}');
             });
 
-            // Save purchase cost inline
             $('.save-cost-btn').on('click', function(e) {
                 e.preventDefault();
                 var btn = $(this);
@@ -482,35 +439,28 @@
                 $.ajax({
                     url: '/woo/products/' + id + '/purchase-cost',
                     type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        purchase_cost: cost
-                    },
+                    data: { _token: '{{ csrf_token() }}', purchase_cost: cost },
                     success: function(res) {
-                        btn.prop('disabled', false).html('<span class="material-symbols-rounded me-1">check</span> Salvat');
+                        btn.prop('disabled', false).html('<span class="material-symbols-rounded me-1">check</span> {{ trans('messages.woo.saved') }}');
                         $('.profit-margin-badge-' + id).html('<span class="text-success">' + res.profit_margin + '</span>');
                         setTimeout(function() {
-                            btn.html('<span class="material-symbols-rounded me-1">save</span> Salvează');
+                            btn.html('<span class="material-symbols-rounded me-1">save</span> {{ trans('messages.woo.btn_save') }}');
                         }, 2000);
                     },
                     error: function(err) {
-                        btn.prop('disabled', false).html('<span class="material-symbols-rounded me-1">save</span> Salvează');
-                        notify({
-                            type: 'danger',
-                            message: 'Eroare la salvarea costului.'
-                        });
+                        btn.prop('disabled', false).html('<span class="material-symbols-rounded me-1">save</span> {{ trans('messages.woo.btn_save') }}');
+                        notify({ type: 'danger', message: '{{ trans('messages.woo.cost_save_error') }}' });
                     }
                 });
             });
 
-            // RFM Donut Chart (ECharts — same setup as dashboard)
             @if(isset($rfmSegments))
                 var rfmChart = echarts.init(document.getElementById('rfmChart'), ECHARTS_THEME);
                 rfmChart.setOption({
                     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
                     legend: { bottom: '0%', left: 'center' },
                     series: [{
-                        name: 'Segmentare RFM',
+                        name: '{{ trans('messages.woo.rfm_chart_name') }}',
                         type: 'pie',
                         radius: ['40%', '70%'],
                         avoidLabelOverlap: false,
@@ -519,10 +469,10 @@
                         emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
                         labelLine: { show: false },
                         data: [
-                            { value: {{ $rfmSegments['champions'] }}, name: 'Champions', itemStyle: { color: '#28a745' } },
-                            { value: {{ $rfmSegments['loyal'] }}, name: 'Loiali', itemStyle: { color: '#007bff' } },
-                            { value: {{ $rfmSegments['at_risk'] }}, name: 'La Risc', itemStyle: { color: '#ffc107' } },
-                            { value: {{ $rfmSegments['lost'] }}, name: 'Pierduți', itemStyle: { color: '#dc3545' } }
+                            { value: {{ $rfmSegments['champions'] }}, name: '{{ trans('messages.woo.seg_champions') }}', itemStyle: { color: '#28a745' } },
+                            { value: {{ $rfmSegments['loyal'] }}, name: '{{ trans('messages.woo.seg_loyal') }}', itemStyle: { color: '#007bff' } },
+                            { value: {{ $rfmSegments['at_risk'] }}, name: '{{ trans('messages.woo.seg_at_risk') }}', itemStyle: { color: '#ffc107' } },
+                            { value: {{ $rfmSegments['lost'] }}, name: '{{ trans('messages.woo.seg_lost') }}', itemStyle: { color: '#dc3545' } }
                         ]
                     }]
                 });

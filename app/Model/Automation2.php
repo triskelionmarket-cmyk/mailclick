@@ -66,6 +66,7 @@ class Automation2 extends Model
     public const TRIGGER_MONTHLY_RECURRING = 'monthly-recurring';
     public const TRIGGER_TAG_BASED = 'tag-based';
     public const TRIGGER_WOO_ABANDONED_CART = 'woo-abandoned-cart';
+    public const TRIGGER_WOO_ORDER_COMPLETED = 'woo-order-completed';
     public const TRIGGER_REMOVE_TAG = 'remove-tag';
     public const TRIGGER_ATTRIBUTE_UPDATE = 'attribute-update';
 
@@ -589,11 +590,14 @@ class Automation2 extends Model
                 $this->checkForMonthlyRecurring();
                 break;
             case self::TRIGGER_SUBSCRIPTION_ANNIVERSARY_DATE:
-                // In progress
+                $this->checkForSubscriptionAnniversary();
                 break;
             case self::TRIGGER_WOO_ABANDONED_CART:
                 $this->checkForAbandonedCart();
-            // no break
+                break;
+            case self::TRIGGER_WOO_ORDER_COMPLETED:
+                $this->checkForOrderCompleted();
+                break;
             case self::TRIGGER_TAG_BASED:
                 break;
             case self::TRIGGER_REMOVE_TAG:
@@ -1421,6 +1425,176 @@ class Automation2 extends Model
 
     public function checkForAbandonedCart()
     {
+        $this->logger()->info('Checking for abandoned carts...');
+
+        // Get the source_uid from trigger options
+        $sourceUid = $this->getTriggerAction()->getOption('source_uid');
+        if (empty($sourceUid)) {
+            $this->logger()->warning('Abandoned cart trigger has no source_uid configured');
+            return;
+        }
+
+        $source = \Acelle\Model\Source::findByUid($sourceUid);
+        if (!$source) {
+            $this->logger()->warning("Source not found for UID: {$sourceUid}");
+            return;
+        }
+
+        // Get the configured wait time (e.g., '1_hour', '24_hour', '3_day')
+        $waitOption = $this->getTriggerAction()->getOption('wait') ?: '24_hour';
+        $parts = explode('_', $waitOption);
+        $waitAmount = (int) $parts[0];
+        $waitUnit = $parts[1] ?? 'hour';
+
+        // Convert to Carbon-friendly format
+        $waitMap = [
+            'minute' => 'minutes',
+            'hour' => 'hours',
+            'day' => 'days',
+            'week' => 'weeks',
+        ];
+        $carbonUnit = $waitMap[$waitUnit] ?? 'hours';
+
+        // Find cart_abandoned events older than the wait time (meaning the wait has elapsed)
+        $cutoff = Carbon::now()->sub($carbonUnit, $waitAmount);
+
+        $thisId = $this->id;
+        $events = DB::table('ecommerce_events')
+            ->where('source_id', $source->id)
+            ->where('event_type', 'cart_abandoned')
+            ->where('created_at', '<=', $cutoff)
+            ->whereNotNull('subscriber_id')
+            ->get();
+
+        $this->logger()->info(sprintf('Found %s abandoned cart events older than %s %s', $events->count(), $waitAmount, $carbonUnit));
+
+        foreach ($events as $event) {
+            $subscriber = Subscriber::find($event->subscriber_id);
+            if (!$subscriber) {
+                continue;
+            }
+
+            // Check if already triggered for this subscriber
+            $existingTrigger = $this->getAutoTriggerFor($subscriber);
+            if (!is_null($existingTrigger)) {
+                $this->logger()->info(sprintf('Subscriber %s already triggered, skipping', $subscriber->email));
+                continue;
+            }
+
+            // Only trigger if subscriber belongs to this automation's mail list
+            if ($subscriber->mail_list_id != $this->mail_list_id) {
+                $this->logger()->info(sprintf('Subscriber %s not in automation list, skipping', $subscriber->email));
+                continue;
+            }
+
+            $this->initTrigger($subscriber);
+            $this->logger()->info(sprintf('Triggered abandoned cart automation for %s (event from %s)', $subscriber->email, $event->created_at));
+        }
+    }
+
+    /**
+     * Check for subscription anniversary date.
+     * Triggers subscribers on the anniversary of when they were added to the list.
+     */
+    public function checkForSubscriptionAnniversary()
+    {
+        $this->logger()->info('Checking for subscription anniversary...');
+
+        // TODAY + CURRENT TIME (customer timezone)
+        $currentTime = new DateTime('now', new DateTimeZone($this->customer->timezone));
+        // TODAY + GIVEN TIME
+        $triggerTime = new DateTime($this->getTriggerAction()->getOptions()['at'], new DateTimeZone($this->customer->timezone));
+
+        if ($currentTime < $triggerTime) {
+            $this->logger()->info(sprintf('Not the right time yet: CURRENT %s < %s', $currentTime->format('H:i:s'), $triggerTime->format('H:i:s')));
+            return;
+        }
+
+        // Get the delay option (e.g., '1 days', '7 days', '30 days', '1 month')
+        $delay = $this->getTriggerAction()->getOption('delay');
+        $thisId = $this->id;
+
+        // Calculate the target subscription date: today minus the delay
+        // e.g., if delay is '7 days' and today is Jan 8, we look for subscribers added on Jan 1
+        $today = Carbon::now($this->customer->timezone);
+        $targetDate = $today->copy()->modify('-' . $delay);
+
+        $this->logger()->info(sprintf('Looking for subscribers added on %s (delay: %s)', $targetDate->format('Y-m-d'), $delay));
+
+        // Find subscribers added on that specific date who haven't been triggered today
+        $startOfTargetDay = $targetDate->copy()->startOfDay();
+        $endOfTargetDay = $targetDate->copy()->endOfDay();
+        $startOfTodayUtc = $today->copy()->startOfDay()->timezone(config('app.timezone'));
+
+        $subscribers = $this->subscribersToSend()
+            ->whereBetween('subscribers.created_at', [$startOfTargetDay, $endOfTargetDay])
+            ->leftJoin('auto_triggers', function ($join) use ($thisId, $startOfTodayUtc) {
+                $join->on('auto_triggers.subscriber_id', 'subscribers.id');
+                $join->where('auto_triggers.automation2_id', $thisId);
+                $join->where('auto_triggers.created_at', '>=', $startOfTodayUtc);
+            })
+            ->whereNull('auto_triggers.subscriber_id')
+            ->select('subscribers.*')
+            ->get();
+
+        foreach ($subscribers as $subscriber) {
+            $this->initTrigger($subscriber);
+            $this->logger()->info(sprintf('NEW > Subscription anniversary trigger for %s (added on %s, delay: %s)', $subscriber->email, $subscriber->created_at, $delay));
+        }
+    }
+
+    /**
+     * Check for completed WooCommerce orders and trigger post-purchase automations.
+     */
+    public function checkForOrderCompleted()
+    {
+        $this->logger()->info('Checking for completed orders...');
+
+        // Get the source_uid from trigger options
+        $sourceUid = $this->getTriggerAction()->getOption('source_uid');
+        if (empty($sourceUid)) {
+            $this->logger()->warning('Order completed trigger has no source_uid configured');
+            return;
+        }
+
+        $source = \Acelle\Model\Source::findByUid($sourceUid);
+        if (!$source) {
+            $this->logger()->warning("Source not found for UID: {$sourceUid}");
+            return;
+        }
+
+        // Look for completed orders in the last 24 hours (scheduler runs every 5 min)
+        $since = Carbon::now()->subDay();
+
+        $orders = \Acelle\Model\EcommerceOrder::where('source_id', $source->id)
+            ->where('status', 'completed')
+            ->where('updated_at', '>=', $since)
+            ->whereNotNull('subscriber_id')
+            ->get();
+
+        $this->logger()->info(sprintf('Found %s completed orders since %s', $orders->count(), $since->toDateTimeString()));
+
+        foreach ($orders as $order) {
+            $subscriber = Subscriber::find($order->subscriber_id);
+            if (!$subscriber) {
+                continue;
+            }
+
+            // Only trigger if subscriber belongs to this automation's mail list
+            if ($subscriber->mail_list_id != $this->mail_list_id) {
+                continue;
+            }
+
+            // Check if already triggered for this subscriber (avoid duplicate triggers)
+            $existingTrigger = $this->getAutoTriggerFor($subscriber);
+            if (!is_null($existingTrigger)) {
+                $this->logger()->info(sprintf('Subscriber %s already triggered for order #%s, skipping', $subscriber->email, $order->source_order_id));
+                continue;
+            }
+
+            $this->initTrigger($subscriber);
+            $this->logger()->info(sprintf('Triggered post-purchase automation for %s (order #%s, total: %s)', $subscriber->email, $order->source_order_id, $order->getFormattedTotal()));
+        }
     }
 
     /**
@@ -1499,6 +1673,7 @@ class Automation2 extends Model
 
         if (config('custom.woo')) {
             $types[] = 'woo-abandoned-cart';
+            $types[] = 'woo-order-completed';
         }
 
         return $types;
@@ -1539,6 +1714,21 @@ class Automation2 extends Model
             [
                 'key' => 're-engagement',
                 'icon' => 'campaign',
+                'trigger_type' => 'tag-based',
+            ],
+            [
+                'key' => 'post-purchase',
+                'icon' => 'receipt_long',
+                'trigger_type' => 'woo-order-completed',
+            ],
+            [
+                'key' => 'review-request',
+                'icon' => 'rate_review',
+                'trigger_type' => 'woo-order-completed',
+            ],
+            [
+                'key' => 'vip-welcome',
+                'icon' => 'diamond',
                 'trigger_type' => 'tag-based',
             ],
         ];
@@ -1769,6 +1959,217 @@ class Automation2 extends Model
                     [
                         'id' => $emailId2,
                         'title' => trans('messages.automation.template.re_engagement.email2'),
+                        'type' => 'ElementAction',
+                        'child' => null,
+                        'options' => [
+                            'key' => 'send-an-email',
+                            'init' => 'true',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                ];
+
+            case 'post-purchase':
+                $emailId1 = $uid();
+                $waitId1 = $uid();
+                $emailId2 = $uid();
+                $waitId2 = $uid();
+                $emailId3 = $uid();
+
+                return [
+                    [
+                        'id' => 'trigger',
+                        'title' => trans('messages.automation.trigger.tree.woo-order-completed'),
+                        'type' => 'ElementTrigger',
+                        'child' => $emailId1,
+                        'options' => [
+                            'key' => 'woo-order-completed',
+                            'type' => 'woo-order-completed',
+                            'init' => true,
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $emailId1,
+                        'title' => trans('messages.automation.template.post-purchase.email1'),
+                        'type' => 'ElementAction',
+                        'child' => $waitId1,
+                        'options' => [
+                            'key' => 'send-an-email',
+                            'init' => 'true',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $waitId1,
+                        'title' => trans('messages.automation.wait.delay.3 days'),
+                        'type' => 'ElementWait',
+                        'child' => $emailId2,
+                        'options' => [
+                            'key' => 'wait',
+                            'time' => '3 days',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $emailId2,
+                        'title' => trans('messages.automation.template.post-purchase.email2'),
+                        'type' => 'ElementAction',
+                        'child' => $waitId2,
+                        'options' => [
+                            'key' => 'send-an-email',
+                            'init' => 'true',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $waitId2,
+                        'title' => trans('messages.automation.wait.delay.1 week'),
+                        'type' => 'ElementWait',
+                        'child' => $emailId3,
+                        'options' => [
+                            'key' => 'wait',
+                            'time' => '1 week',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $emailId3,
+                        'title' => trans('messages.automation.template.post-purchase.email3'),
+                        'type' => 'ElementAction',
+                        'child' => null,
+                        'options' => [
+                            'key' => 'send-an-email',
+                            'init' => 'true',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                ];
+
+            case 'review-request':
+                $waitId1 = $uid();
+                $emailId1 = $uid();
+                $waitId2 = $uid();
+                $emailId2 = $uid();
+
+                return [
+                    [
+                        'id' => 'trigger',
+                        'title' => trans('messages.automation.trigger.tree.woo-order-completed'),
+                        'type' => 'ElementTrigger',
+                        'child' => $waitId1,
+                        'options' => [
+                            'key' => 'woo-order-completed',
+                            'type' => 'woo-order-completed',
+                            'init' => true,
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $waitId1,
+                        'title' => trans('messages.automation.wait.delay.10 days'),
+                        'type' => 'ElementWait',
+                        'child' => $emailId1,
+                        'options' => [
+                            'key' => 'wait',
+                            'time' => '10 days',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $emailId1,
+                        'title' => trans('messages.automation.template.review-request.email1'),
+                        'type' => 'ElementAction',
+                        'child' => $waitId2,
+                        'options' => [
+                            'key' => 'send-an-email',
+                            'init' => 'true',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $waitId2,
+                        'title' => trans('messages.automation.wait.delay.5 days'),
+                        'type' => 'ElementWait',
+                        'child' => $emailId2,
+                        'options' => [
+                            'key' => 'wait',
+                            'time' => '5 days',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $emailId2,
+                        'title' => trans('messages.automation.template.review-request.email2'),
+                        'type' => 'ElementAction',
+                        'child' => null,
+                        'options' => [
+                            'key' => 'send-an-email',
+                            'init' => 'true',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                ];
+
+            case 'vip-welcome':
+                $emailId1 = $uid();
+                $waitId1 = $uid();
+                $emailId2 = $uid();
+
+                return [
+                    [
+                        'id' => 'trigger',
+                        'title' => trans('messages.automation.trigger.tree.tag-based'),
+                        'type' => 'ElementTrigger',
+                        'child' => $emailId1,
+                        'options' => [
+                            'key' => 'tag-based',
+                            'type' => 'tag-based',
+                            'tags' => 'vip-customer',
+                            'init' => true,
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $emailId1,
+                        'title' => trans('messages.automation.template.vip-welcome.email1'),
+                        'type' => 'ElementAction',
+                        'child' => $waitId1,
+                        'options' => [
+                            'key' => 'send-an-email',
+                            'init' => 'true',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $waitId1,
+                        'title' => trans('messages.automation.wait.delay.3 days'),
+                        'type' => 'ElementWait',
+                        'child' => $emailId2,
+                        'options' => [
+                            'key' => 'wait',
+                            'time' => '3 days',
+                        ],
+                        'last_executed' => null,
+                        'evaluationResult' => null,
+                    ],
+                    [
+                        'id' => $emailId2,
+                        'title' => trans('messages.automation.template.vip-welcome.email2'),
                         'type' => 'ElementAction',
                         'child' => null,
                         'options' => [

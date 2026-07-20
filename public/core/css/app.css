@@ -4081,7 +4081,7 @@ form.loading input {
     align-items: center;
     height: 280px;
     overflow: hidden;
-    background: #ddd;
+    background: #fff;
 }
 @media (max-width: 992px) {
     .product-image-box {

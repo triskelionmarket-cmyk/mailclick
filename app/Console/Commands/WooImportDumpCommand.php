@@ -287,8 +287,60 @@ class WooImportDumpCommand extends Command
         ];
 
         $source = Source::where('customer_id', 2)->first() ?? Source::first();
+        // Product image URLs extracted from GedisBev SQL dump (wp_posts attachments)
+        $productImages = [
+            1001 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00001556-1.jpg',
+            1002 => 'https://www.finebar.ro/wp-content/uploads/2021/01/00000178-1.jpg',
+            1003 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00001556-1.jpg',
+            1004 => 'https://www.finebar.ro/wp-content/uploads/2021/01/00000181-1.jpg',
+            1005 => 'https://www.finebar.ro/wp-content/uploads/2021/12/100001468.jpg',
+            1006 => 'https://www.finebar.ro/wp-content/uploads/2021/01/00000176-2.jpg',
+            1007 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000234-1.jpg',
+            1008 => 'https://www.finebar.ro/wp-content/uploads/2020/07/00002386-1.jpg',
+            1009 => 'https://www.finebar.ro/wp-content/uploads/2021/12/100001468.jpg',
+            1010 => 'https://www.finebar.ro/wp-content/uploads/2021/12/00000906.jpg',
+            1011 => 'https://www.finebar.ro/wp-content/uploads/2022/11/Recas_Muse_White_2021_0.75L_10101267.jpg',
+            1012 => 'https://www.finebar.ro/wp-content/uploads/2020/11/00000540-1.jpg',
+            1013 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000484.jpg',
+            1014 => 'https://www.finebar.ro/wp-content/uploads/2020/10/Jidvei_Vinars_VSOP_0.7L_10101964.png',
+            1015 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000484.jpg',
+            1016 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000484.jpg',
+            1017 => 'https://www.finebar.ro/wp-content/uploads/2020/10/10100016.jpg',
+            1018 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000484.jpg',
+            1019 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000484.jpg',
+            1020 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000484.jpg',
+            1021 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000484.jpg',
+            1022 => 'https://www.finebar.ro/wp-content/uploads/2020/11/00002339-1.jpg',
+            1023 => 'https://www.finebar.ro/wp-content/uploads/2020/09/00001882.jpg',
+            1024 => 'https://www.finebar.ro/wp-content/uploads/2020/09/00001882.jpg',
+            1025 => 'https://www.finebar.ro/wp-content/uploads/2022/12/Purcari_Negru_de_Purcari_Rosu_Sec_2020_0.75L_10100695.jpg',
+            1026 => 'https://www.finebar.ro/wp-content/uploads/2022/09/Purcari_Freedom_Blend-Rosu_Sec_0.75L_10101156.jpg',
+            1027 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000515.jpg',
+            1028 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00001572-1.jpg',
+            1029 => 'https://www.finebar.ro/wp-content/uploads/2020/09/00000370-1.jpg',
+            1030 => 'https://www.finebar.ro/wp-content/uploads/2020/08/Aperol_0.7L_00000259-1.png',
+            1031 => 'https://www.finebar.ro/wp-content/uploads/2020/08/00002364-1.jpg',
+            1032 => 'https://www.finebar.ro/wp-content/uploads/2020/09/00001341.jpg',
+            1033 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000912.jpg',
+            1034 => 'https://www.finebar.ro/wp-content/uploads/2020/10/00000912.jpg',
+            1035 => 'https://www.finebar.ro/wp-content/uploads/2023/08/Davino_Flamboyant_0.75L_10101949.png',
+        ];
 
         foreach ($sampleProducts as $p) {
+            // Determine category based on product name
+            $name = mb_strtolower($p['name']);
+            if (str_contains($name, 'bere') || str_contains($name, 'guinness') || str_contains($name, 'paulaner') || str_contains($name, 'weih') || str_contains($name, 'leffe') || str_contains($name, 'corona')) {
+                $catName = $cat4->name;
+            } elseif (str_contains($name, 'vin') || str_contains($name, 'recas') || str_contains($name, 'purcari') || str_contains($name, 'davino') || str_contains($name, 'prosecco') || str_contains($name, 'cricova') || str_contains($name, 'jidvei')) {
+                $catName = $cat2->name;
+            } elseif (str_contains($name, 'whisky') || str_contains($name, 'whiskey') || str_contains($name, 'lagavulin') || str_contains($name, 'glenfiddich') || str_contains($name, 'jack daniel') || str_contains($name, 'jameson') || str_contains($name, 'chivas')) {
+                $catName = $cat3->name;
+            } else {
+                $catName = $cat1->name;
+            }
+
+            $imageUrl = $productImages[$p['id']] ?? null;
+
             $wp = WooProduct::updateOrCreate(
                 ['store_id' => $storeId, 'woo_product_id' => $p['id']],
                 [
@@ -300,6 +352,8 @@ class WooImportDumpCommand extends Command
                     'stock_status' => 'instock',
                     'stock_quantity' => rand(50, 500),
                     'rfm_score' => rand(15, 49) / 10.0,
+                    'categories_json' => [$catName],
+                    'images_json' => $imageUrl ? [$imageUrl] : null,
                 ]
             );
 

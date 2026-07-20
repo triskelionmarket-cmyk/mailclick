@@ -58,7 +58,7 @@
                     <p>{{ trans('messages.store.connected.desc') }}</p>
                 </div>
                 <div class="text-right">
-                    <a href="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@index') }}?store_id={{ $source->id }}" class="btn btn-primary me-2"><span class="material-symbols-rounded align-middle me-1">analytics</span> Analiză & Recomandări</a>
+                    <a href="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@index') }}?store_id={{ $source->id }}" class="btn btn-primary me-2"><span class="material-symbols-rounded align-middle me-1">analytics</span> {{ trans('messages.analytics_recommendations') }}</a>
                     <a href="" class="btn btn-secondary">{{ trans('messages.source.refresh') }}</a>
                 </div>
             </div>

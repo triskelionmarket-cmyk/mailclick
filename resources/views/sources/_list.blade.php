@@ -32,7 +32,7 @@
 				</td>
 				<td class="text-end">
 					<a href="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@index') }}" role="button" class="btn btn-outline-primary m-icon me-1">
-						<span class="material-symbols-rounded">analytics</span> Analiză & Recomandări
+						<span class="material-symbols-rounded">analytics</span> {{ trans('messages.analytics_recommendations') }}
 					</a>
 					<a href="{{ action('SourceController@sync', $source->uid) }}"
 						link-method="POST"

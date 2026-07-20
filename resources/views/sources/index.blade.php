@@ -41,7 +41,7 @@
             </div>
             <div class="text-end">
                 <a href="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@index') }}" class="btn btn-primary me-2">
-                    <span class="material-symbols-rounded align-middle me-1">analytics</span> Analiză & Recomandări
+                    <span class="material-symbols-rounded align-middle me-1">analytics</span> {{ trans('messages.analytics_recommendations') }}
                 </a>
                 <a href="{{ action("SourceController@create") }}" role="button" class="btn btn-secondary m-icon">
                     <span class="material-symbols-rounded">add</span> {{ trans('messages.source.add_new') }}
