@@ -33,6 +33,10 @@ class CreditTracker
 
     public function createFile()
     {
+        $dir = dirname($this->filepath);
+        if (!file_exists($dir)) {
+            mkdir($dir, 0777, true);
+        }
         $file = fopen($this->filepath, 'w');
         fclose($file);
     }
