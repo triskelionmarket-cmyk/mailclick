@@ -271,6 +271,12 @@
                                     <span>{{ trans('messages.stores_connections') }}</span>
                                 </a>
                             </li>
+                            <li class="nav-item {{ in_array($menu, ['woocommerce', 'woo', 'analytics']) ? 'active' : '' }}">
+                                <a class="dropdown-item d-flex align-items-center" href="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@index') }}">
+                                    <i class="navbar-icon" style="width:20px"><span class="material-symbols-rounded">analytics</span></i>
+                                    <span>Analiză & Recomandări</span>
+                                </a>
+                            </li>
                         @endif
                     </ul>
 				</li>

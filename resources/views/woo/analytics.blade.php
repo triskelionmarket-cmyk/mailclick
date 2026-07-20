@@ -1,17 +1,12 @@
 @extends('layouts.core.frontend')
 
-@section('title', 'Analiză Magazin & Produse WooCommerce')
+@section('title', 'Analiză Magazin & Recomandări')
 
 @section('page_header')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="font-bold mb-1"><i class="bi bi-graph-up-arrow me-2 text-primary"></i> Analiză Magazin & Recomandări</h1>
             <p class="text-muted mb-0">Tablou de bord analitic, segmentare RFM și gestionare costuri de achiziție per produs.</p>
-        </div>
-        <div>
-            <a href="{{ asset('plugins/mailclick-connect.zip') }}" class="btn btn-outline-primary rounded-3 fw-semibold" download>
-                <i class="bi bi-download me-1"></i> Plugin WP (.zip)
-            </a>
         </div>
     </div>
 @endsection

@@ -232,9 +232,8 @@ Route::group(['namespace' => '\Acelle\Http\Controllers', 'middleware' => ['not_i
     Route::post('2fa/google-authenticator/secret-key/save', 'Google2FAController@saveKey');
     Route::get('2fa/google-authenticator/secret-key/generate', 'Google2FAController@generateSecretKey');
 
-    // WooCommerce OAuth Connect & Analytics
-    Route::get('woo/connect', 'WooConnectController@authorizeStore');
-    Route::post('woo/connect/approve', 'WooConnectController@approveStore');
+    // E-commerce Analytics & RFM Dashboard
+    Route::get('ecommerce/analytics', 'WooAnalyticsController@index');
     Route::get('woo/analytics', 'WooAnalyticsController@index');
     Route::post('woo/products/{id}/purchase-cost', 'WooAnalyticsController@updatePurchaseCost');
     Route::post('woo/products/import-cost-prices', 'WooAnalyticsController@importPurchaseCosts');
