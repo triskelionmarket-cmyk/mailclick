@@ -136,8 +136,16 @@ class Source extends Model
      */
     public function classMapping()
     {
-        $class = '\\Acelle\\Model\\' . $this->type;
-        return $class::find($this->id);
+        if (in_array(strtolower($this->type), ['woocommerce', 'woostore', 'woo'])) {
+            return \Acelle\Model\WooStore::where('source_id', $this->id)->first() ?? \Acelle\Model\WooStore::find($this->id);
+        }
+
+        $class = '\\Acelle\\Model\\' . ucfirst($this->type);
+        if (class_exists($class)) {
+            return $class::find($this->id);
+        }
+
+        return null;
     }
 
     public function createDefaultList()
