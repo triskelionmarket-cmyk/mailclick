@@ -191,15 +191,18 @@ class WooImportDumpCommand extends Command
                 $grossRevenue = (float)trim($parts[8] ?? $netRevenue, "' ");
 
                 if ($wooOrderId > 0 && $wooProductId > 0) {
-                    WooOrderItem::updateOrCreate(
-                        ['store_id' => $storeId, 'order_id' => $wooOrderId, 'woo_product_id' => $wooProductId],
-                        [
-                            'qty' => max(1, $qty),
-                            'price' => $netRevenue,
-                            'total' => $grossRevenue,
-                        ]
-                    );
-                    $count++;
+                    $order = WooOrder::where('store_id', $storeId)->where('woo_order_id', $wooOrderId)->first();
+                    if ($order) {
+                        WooOrderItem::updateOrCreate(
+                            ['store_id' => $storeId, 'order_id' => $order->id, 'woo_product_id' => $wooProductId],
+                            [
+                                'qty' => max(1, $qty),
+                                'price' => $netRevenue,
+                                'total' => $grossRevenue,
+                            ]
+                        );
+                        $count++;
+                    }
                 }
             }
         }
@@ -305,7 +308,7 @@ class WooImportDumpCommand extends Command
                 $qty = rand(2, 6);
                 $orderTotal = $p['price'] * $qty;
 
-                WooOrder::updateOrCreate(
+                $wooOrder = WooOrder::updateOrCreate(
                     ['store_id' => $storeId, 'woo_order_id' => $orderId],
                     [
                         'order_number' => '#' . $orderId,
@@ -322,7 +325,7 @@ class WooImportDumpCommand extends Command
                 );
 
                 WooOrderItem::updateOrCreate(
-                    ['store_id' => $storeId, 'order_id' => $orderId, 'woo_product_id' => $p['id']],
+                    ['store_id' => $storeId, 'order_id' => $wooOrder->id, 'woo_product_id' => $p['id']],
                     [
                         'name' => $p['name'],
                         'qty' => $qty,
