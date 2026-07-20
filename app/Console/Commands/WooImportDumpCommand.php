@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class WooImportDumpCommand extends Command
 {
-    protected $signature = 'woo:import-dump {file? : Path to .sql dump file} {--customer_id=1 : Customer ID to associate with}';
+    protected $signature = 'woo:import-dump {file? : Path to .sql dump file} {--customer_id=1 : Customer ID to associate with} {--seed : Force seed GedisBev demo data}';
     protected $description = 'Importă o bază de date WooCommerce (.sql dump) direct în sistemul analitic MailClick';
 
     public function handle(): int
@@ -89,9 +89,9 @@ class WooImportDumpCommand extends Command
             }
         }
 
-        // Always seed GedisBev demo dataset if no rows were loaded
-        if (WooCustomer::where('store_id', $store->id)->count() == 0) {
-            $this->info("Generare date demonstrative avansate GedisBev...");
+        // Always seed GedisBev demo dataset if no orders exist
+        if (WooOrder::where('store_id', $store->id)->count() == 0 || $this->option('seed')) {
+            $this->info("Generare date demonstrative avansate GedisBev (produse, comenzi, clienți)...");
             $this->seedGedisbevData($store->id);
         }
 
