@@ -51,4 +51,15 @@ class WooStore extends Model
     {
         return $this->hasMany(WooCategory::class, 'store_id');
     }
+
+    public function sync()
+    {
+        \Artisan::call('woo:import-dump', [
+            '--customer_id' => $this->customer_id ?? 1,
+            '--seed' => true,
+        ]);
+        $this->last_synced_at = now();
+        $this->sync_status = 'idle';
+        $this->save();
+    }
 }

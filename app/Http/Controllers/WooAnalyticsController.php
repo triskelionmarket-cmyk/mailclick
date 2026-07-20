@@ -54,10 +54,15 @@ class WooAnalyticsController extends Controller
         ];
 
         // All Products with Pagination for Purchase Cost editing
-        $products = WooProduct::where('store_id', $selectedStore->id)
-            ->search($request->keyword ?? '')
-            ->orderBy('id', 'desc')
-            ->paginate(15);
+        $productsQuery = WooProduct::where('store_id', $selectedStore->id);
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $productsQuery->where(function($q) use ($keyword) {
+                $q->where('name', 'like', "%{$keyword}%")
+                  ->orWhere('sku', 'like', "%{$keyword}%");
+            });
+        }
+        $products = $productsQuery->orderBy('id', 'desc')->paginate(15);
 
         return view('woo.analytics', [
             'stores'          => $stores,

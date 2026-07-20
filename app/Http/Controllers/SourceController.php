@@ -147,15 +147,17 @@ class SourceController extends Controller
      */
     public function sync(Request $request, $uid)
     {
-        // connection
         $source = Source::findByUid($uid);
-        $source = $source->classMapping();
+        if ($source) {
+            $mapped = $source->classMapping();
+            if ($mapped && method_exists($mapped, 'sync')) {
+                $mapped->sync();
+            } elseif (method_exists($source, 'sync')) {
+                $source->sync();
+            }
+        }
 
-        // import products
-        $source->sync();
-
-        // redirect
-        $request->session()->flash('alert-success', 'Products were imported!');
+        $request->session()->flash('alert-success', 'Datele magazinului au fost sincronizate cu succes!');
         return redirect()->action('SourceController@index');
     }
 
