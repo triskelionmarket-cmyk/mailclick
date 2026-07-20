@@ -25,6 +25,40 @@ class WooImportDumpCommand extends Command
         $filePath = $this->argument('file');
         $customerId = $this->option('customer_id');
 
+        $customer = Customer::find($customerId);
+        if (!$customer) {
+            $customer = Customer::first();
+        }
+
+        if (!$customer) {
+            $this->error("Niciun utilizator/client găsit cu ID {$customerId}");
+            return 1;
+        }
+
+        // 1. Ensure WooStore exists
+        $store = WooStore::firstOrCreate(
+            ['customer_id' => $customer->id],
+            [
+                'store_url' => 'https://gedisbev.ro',
+                'store_name' => 'GedisBev WooCommerce',
+                'consumer_key' => 'ck_demo_gedisbev',
+                'consumer_secret' => 'cs_demo_gedisbev',
+                'status' => 'connected',
+                'last_sync_at' => now(),
+            ]
+        );
+
+        // Also ensure Source model exists for UI compatibility
+        $source = Source::where('customer_id', $customer->id)->where('type', 'woocommerce')->first();
+        if (!$source) {
+            $source = new Source();
+            $source->uid = uniqid();
+            $source->customer_id = $customer->id;
+            $source->type = 'woocommerce';
+            $source->meta = json_encode(['connect_url' => 'https://gedisbev.ro', 'name' => 'GedisBev WooCommerce']);
+            $source->save();
+        }
+
         if (!empty($filePath) && file_exists($filePath)) {
             $this->info("Pornire procesare dump SQL: {$filePath} pentru clientul #{$customer->id}...");
             $fileSizeMB = round(filesize($filePath) / 1024 / 1024, 2);
