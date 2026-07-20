@@ -5,6 +5,7 @@ namespace Acelle\Console\Commands;
 use Illuminate\Console\Command;
 use Acelle\Model\Customer;
 use Acelle\Model\Source;
+use Acelle\Model\Product;
 use Acelle\Model\WooStore;
 use Acelle\Model\WooProduct;
 use Acelle\Model\WooOrder;
