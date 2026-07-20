@@ -31,9 +31,12 @@
 					<span class="text-muted d-block mt-2">{{ trans('messages.source.last_sync_at') }}</span>
 				</td>
 				<td class="text-end">
+					<a href="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@index') }}" role="button" class="btn btn-outline-primary m-icon me-1">
+						<span class="material-symbols-rounded">analytics</span> Analiză & Recomandări
+					</a>
 					<a href="{{ action('SourceController@sync', $source->uid) }}"
 						link-method="POST"
-						role="button" class="btn btn-secondary m-icon sync-button">
+						role="button" class="btn btn-secondary m-icon sync-button me-1">
 						<span class="material-symbols-rounded">sync</span> {{ trans('messages.source.sync') }}</a>
 					<div class="btn-group">
 						<button role="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown"></button>
