@@ -60,6 +60,14 @@
                         </i>
                         <span>{{ trans('messages.templates') }}</span>
                     </a>
+                </li>
+                <li class="nav-item {{ in_array($menu, ['woocommerce', 'woo']) ? 'active' : '' }}">
+                    <a href="{{ action('\Acelle\Http\Controllers\WooAnalyticsController@index') }}" title="Analiză Magazin WooCommerce" class="leftbar-tooltip nav-link d-flex align-items-center py-3 lvl-1">
+                        <i class="navbar-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-shop" viewBox="0 0 16 16"><path d="M2.97 1.35A1 1 0 0 1 3.73 1h8.54a1 1 0 0 1 .76.35l2.609 3.044A1.5 1.5 0 0 1 16 5.42v.44a.5.5 0 0 1-.5.5h-.5a.5.5 0 0 1-.5-.5V5.42a.5.5 0 0 0-.153-.355L12.062 2H3.938L1.653 5.065A.5.5 0 0 0 1.5 5.42v.44a.5.5 0 0 1-.5.5h-.5a.5.5 0 0 1-.5-.5v-.44c0-.422.169-.828.47-1.126l2.609-3.044zM2.5 7a.5.5 0 0 1 .5.5V14h10V7.5a.5.5 0 0 1 1 0V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5a.5.5 0 0 1 .5-.5z"/></svg>
+                        </i>
+                        <span>Analiză Magazin</span>
+                    </a>
                 </li>                
 
                 <li class="nav-item dropdown {{ in_array($menu, [
