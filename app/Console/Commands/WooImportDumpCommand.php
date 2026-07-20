@@ -97,10 +97,9 @@ class WooImportDumpCommand extends Command
 
         // Calculate RFM & CLV Metrics
         $analyticsService = new WooAnalyticsService();
-        $analyticsService->recalculateRFM($store->id);
-        $analyticsService->recalculateProductRecommendations($store->id);
+        $kpis = $analyticsService->getStoreKPIs($store->id);
 
-        $this->info("✅ Calculare scoruri RFM, CLV și recomandări de produse finalizată!");
+        $this->info("✅ Calculare date e-commerce finalizată: {$kpis['total_orders']} comenzi, {$kpis['total_customers']} clienți, Venituri: {$kpis['total_revenue']} RON!");
         $this->info("Puteți vedea rezultatele live pe: https://app.mailclick.ro/ecommerce/analytics");
 
         return 0;
